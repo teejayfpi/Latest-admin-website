@@ -8,72 +8,82 @@ import { UserGrowthChart } from "@/components/dashboard/UserGrowthChart";
 import { RecentActivity } from "@/components/dashboard/RecentActivity";
 import { formatCurrency, formatNumber } from "@/lib/utils";
 import { Users, PiggyBank, CreditCard, Ticket, TrendingUp, DollarSign } from "lucide-react";
+import { getDashboardStats, getTransactionsChartData, getUserGrowthData, getTransactions, getTickets } from "@/lib/db-service";
 import type { DashboardStats } from "@/types";
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [chartData, setChartData] = useState<any[]>([]);
+  const [userGrowthData, setUserGrowthData] = useState<any[]>([]);
+  const [recentActivities, setRecentActivities] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Simulated data for demonstration
-    // In production, this would fetch from Supabase
-    const fetchStats = async () => {
+    const fetchData = async () => {
       setLoading(true);
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      setError(null);
+      
+      try {
+        const dashboardStats = await getDashboardStats();
+        setStats(dashboardStats);
 
-      setStats({
-        totalUsers: 12453,
-        activeUsers: 10892,
-        totalSavings: 156789432,
-        totalLoans: 2847,
-        pendingLoans: 156,
-        pendingKYC: 89,
-        openTickets: 42,
-        monthlyGrowth: 12.5,
-      });
-      setLoading(false);
+        const txChartData = await getTransactionsChartData(30);
+        setChartData(txChartData);
+
+        const growthData = await getUserGrowthData(6);
+        setUserGrowthData(growthData);
+
+        const { data: transactions } = await getTransactions({ pageSize: 5 });
+
+        const activities: any[] = [];
+        transactions?.slice(0, 5).forEach((tx: any) => {
+          activities.push({
+            id: tx.id,
+            type: "deposit",
+            description: `${tx.type} from ${tx.profile?.name || "User"}`,
+            amount: tx.amount,
+            status: tx.status,
+            time: tx.created_at,
+          });
+        });
+
+        setRecentActivities(activities);
+      } catch (err: any) {
+        console.error("Error fetching dashboard data:", err);
+        setError(err.message || "Failed to load dashboard data");
+        setStats({
+          totalUsers: 0,
+          activeUsers: 0,
+          totalSavings: 0,
+          totalLoans: 0,
+          pendingLoans: 0,
+          pendingKYC: 0,
+          openTickets: 0,
+          monthlyGrowth: 0,
+        });
+      } finally {
+        setLoading(false);
+      }
     };
 
-    fetchStats();
+    fetchData();
   }, []);
-
-  const chartData = [
-    { date: "2024-01", deposits: 12500000, withdrawals: 8500000, loans: 3500000 },
-    { date: "2024-02", deposits: 15800000, withdrawals: 9200000, loans: 4200000 },
-    { date: "2024-03", deposits: 18200000, withdrawals: 10500000, loans: 5100000 },
-    { date: "2024-04", deposits: 14600000, withdrawals: 8800000, loans: 3800000 },
-    { date: "2024-05", deposits: 22100000, withdrawals: 12400000, loans: 6800000 },
-    { date: "2024-06", deposits: 19800000, withdrawals: 11200000, loans: 5900000 },
-  ];
-
-  const userGrowthData = [
-    { month: "Jan", users: 245 },
-    { month: "Feb", users: 312 },
-    { month: "Mar", users: 428 },
-    { month: "Apr", users: 367 },
-    { month: "May", users: 512 },
-    { month: "Jun", users: 489 },
-  ];
-
-  const recentActivities = [
-    { id: "1", type: "deposit" as const, description: "Monthly contribution from Adebayo Johnson", amount: 50000, status: "completed", time: "2 min ago" },
-    { id: "2", type: "loan" as const, description: "New loan application - Olumide Adeyemi", amount: 500000, status: "pending", time: "5 min ago" },
-    { id: "3", type: "kyc" as const, description: "KYC verification submitted by Fatima Ibrahim", status: "pending", time: "12 min ago" },
-    { id: "4", type: "withdrawal" as const, description: "Withdrawal request - Chinedu Okonkwo", amount: 75000, status: "pending", time: "18 min ago" },
-    { id: "5", type: "user" as const, description: "New user registration - Emeka Nwosu", status: "active", time: "25 min ago" },
-    { id: "6", type: "ticket" as const, description: "Support ticket escalated by Aisha Mohammed", status: "escalated", time: "1 hour ago" },
-  ];
 
   return (
     <MainLayout title="Dashboard" subtitle="Welcome back! Here's what's happening today.">
       <div className="space-y-6">
-        {/* Stats Grid */}
+        {error && (
+          <div className="rounded-lg bg-red-50 border border-red-200 p-4 text-red-700">
+            {error}
+          </div>
+        )}
+
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
           <StatCard
             title="Total Users"
             value={loading ? "..." : formatNumber(stats?.totalUsers || 0)}
-            change={8.2}
+            change={stats?.monthlyGrowth || 0}
             changeLabel="from last month"
             icon={Users}
             iconColor="text-blue-600"
@@ -108,7 +118,6 @@ export default function DashboardPage() {
           />
         </div>
 
-        {/* Quick Stats */}
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between">
@@ -146,7 +155,7 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-slate-500">Monthly Interest</p>
-                <p className="mt-2 text-3xl font-bold text-slate-900">{formatCurrency(4567890)}</p>
+                <p className="mt-2 text-3xl font-bold text-slate-900">{loading ? "..." : formatCurrency(stats?.totalSavings || 0)}</p>
               </div>
               <div className="rounded-full bg-emerald-100 p-3">
                 <DollarSign className="h-6 w-6 text-emerald-600" />
@@ -159,14 +168,12 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Charts */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <TransactionChart data={chartData} />
-          <UserGrowthChart data={userGrowthData} />
+          <TransactionChart data={chartData.length > 0 ? chartData : [{ date: "No data", deposits: 0, withdrawals: 0, loans: 0 }]} />
+          <UserGrowthChart data={userGrowthData.length > 0 ? userGrowthData : [{ month: "No data", users: 0 }]} />
         </div>
 
-        {/* Recent Activity */}
-        <RecentActivity activities={recentActivities} />
+        <RecentActivity activities={recentActivities.length > 0 ? recentActivities : []} />
       </div>
     </MainLayout>
   );

@@ -29,28 +29,40 @@ export default function TicketsPage() {
   useEffect(() => {
     const fetchTickets = async () => {
       setLoading(true);
-      await new Promise((resolve) => setTimeout(resolve, 800));
-
-      const mockTickets: TicketWithProfile[] = [
-        { id: "t-1", profile_id: "1", subject: "Unable to complete KYC verification", description: "I'm having trouble uploading my ID document. The upload keeps failing.", category: "KYC", priority: "high", status: "open", assigned_to: null, resolution_notes: null, resolved_at: null, closed_at: null, created_at: "2024-06-15T10:00:00Z", updated_at: "2024-06-15T10:00:00Z", profile: { id: "1", user_id: "USR-001", email: "adebayo@email.com", phone: "+2348012345678", name: "Adebayo Johnson", role: "member", is_active: true, is_flagged: false, flagged_reason: null, kyc_verified: false, department: null, access_level: null, mfa_enabled: false, created_at: "", updated_at: "" } },
-        { id: "t-2", profile_id: "2", subject: "Loan application not approved", description: "My loan application has been pending for 3 days now. Please assist.", category: "Loans", priority: "medium", status: "in_progress", assigned_to: "admin-1", resolution_notes: "Under review", resolved_at: null, closed_at: null, created_at: "2024-06-14T14:30:00Z", updated_at: "2024-06-15T09:00:00Z", profile: { id: "2", user_id: "USR-002", email: "fatima@email.com", phone: "+2348098765432", name: "Fatima Ibrahim", role: "member", is_active: true, is_flagged: false, flagged_reason: null, kyc_verified: true, department: null, access_level: null, mfa_enabled: true, created_at: "", updated_at: "" } },
-        { id: "t-3", profile_id: "3", subject: "Withdrawal delayed", description: "I requested a withdrawal 2 days ago but haven't received the funds.", category: "Transactions", priority: "urgent", status: "escalated", assigned_to: "admin-2", resolution_notes: null, resolved_at: null, closed_at: null, created_at: "2024-06-13T11:00:00Z", updated_at: "2024-06-14T16:00:00Z", profile: { id: "3", user_id: "USR-003", email: "olumide@email.com", phone: "+2348055551234", name: "Olumide Adeyemi", role: "member", is_active: true, is_flagged: false, flagged_reason: null, kyc_verified: true, department: null, access_level: null, mfa_enabled: false, created_at: "", updated_at: "" } },
-        { id: "t-4", profile_id: "4", subject: "Savings goal question", description: "How do I set up automatic savings contributions?", category: "Savings", priority: "low", status: "resolved", assigned_to: "admin-1", resolution_notes: "Provided instructions on setting up auto-debit", resolved_at: "2024-06-12T15:00:00Z", closed_at: "2024-06-12T16:00:00Z", created_at: "2024-06-11T09:00:00Z", updated_at: "2024-06-12T16:00:00Z", profile: { id: "4", user_id: "USR-004", email: "chinedu@email.com", phone: "+2348166667890", name: "Chinedu Okonkwo", role: "member", is_active: true, is_flagged: false, flagged_reason: null, kyc_verified: true, department: null, access_level: null, mfa_enabled: true, created_at: "", updated_at: "" } },
-      ];
-
-      setTickets(mockTickets);
-      setTotalPages(3);
-      setLoading(false);
+      try {
+        const { getTickets } = await import("@/lib/db-service");
+        const response = await getTickets({
+          status: statusFilter || undefined,
+          priority: priorityFilter || undefined,
+          search: search || undefined,
+          page,
+          pageSize: 20,
+        });
+        
+        setTickets(response.data as TicketWithProfile[]);
+        setTotalPages(response.totalPages);
+      } catch (error) {
+        console.error("Error fetching tickets:", error);
+        setTickets([]);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchTickets();
   }, [statusFilter, priorityFilter, search, page]);
 
-  const handleResolve = () => {
+  const handleResolve = async () => {
     if (!selectedTicket) return;
-    setTickets((prev) => prev.map((t) => t.id === selectedTicket.id ? { ...t, status: "resolved" as const, resolution_notes: resolutionNotes, resolved_at: new Date().toISOString() } : t));
-    setShowDetailModal(false);
-    setResolutionNotes("");
+    try {
+      const { updateTicketStatus } = await import("@/lib/db-service");
+      await updateTicketStatus(selectedTicket.id, "resolved", resolutionNotes);
+      setTickets((prev) => prev.map((t) => t.id === selectedTicket.id ? { ...t, status: "resolved" as any, resolution_notes: resolutionNotes, resolved_at: new Date().toISOString() } : t));
+      setShowDetailModal(false);
+      setResolutionNotes("");
+    } catch (error) {
+      console.error("Error resolving ticket:", error);
+    }
   };
 
   const columns = [

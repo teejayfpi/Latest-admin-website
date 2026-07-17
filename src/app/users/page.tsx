@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { formatCurrency, formatDate, getStatusColor, getRoleColor, getInitials } from "@/lib/utils";
 import { Search, Filter, MoreVertical, Ban, CheckCircle, Flag, Eye, Mail, Phone } from "lucide-react";
+import { getUsers } from "@/lib/db-service";
 import type { Profile, Wallet, Savings } from "@/types";
 
 interface UserWithDetails extends Profile {
@@ -24,116 +25,32 @@ export default function UsersPage() {
   const [roleFilter, setRoleFilter] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const [selectedUser, setSelectedUser] = useState<UserWithDetails | null>(null);
   const [showUserModal, setShowUserModal] = useState(false);
 
   useEffect(() => {
     const fetchUsers = async () => {
       setLoading(true);
-      await new Promise((resolve) => setTimeout(resolve, 800));
-
-      // Simulated data
-      const mockUsers: UserWithDetails[] = [
-        {
-          id: "1",
-          user_id: "USR-001",
-          email: "adebayo.johnson@email.com",
-          phone: "+2348012345678",
-          name: "Adebayo Johnson",
-          role: "member",
-          is_active: true,
-          is_flagged: false,
-          flagged_reason: null,
-          kyc_verified: true,
-          department: null,
-          access_level: null,
-          mfa_enabled: false,
-          created_at: "2024-01-15T10:30:00Z",
-          updated_at: "2024-06-10T08:00:00Z",
-          wallet: { id: "w1", profile_id: "1", balance: 245000, currency: "NGN", is_active: true, last_updated: "2024-06-15T10:00:00Z", created_at: "", updated_at: "" },
-          savings: { id: "s1", profile_id: "1", total_saved: 1250000, monthly_savings: 50000, first_savings_date: "2024-01-15", consecutive_months: 6, last_savings_date: "2024-06-15", created_at: "", updated_at: "" },
-        },
-        {
-          id: "2",
-          user_id: "USR-002",
-          email: "fatima.ibrahim@email.com",
-          phone: "+2348098765432",
-          name: "Fatima Ibrahim",
-          role: "member",
-          is_active: true,
-          is_flagged: false,
-          flagged_reason: null,
-          kyc_verified: true,
-          department: null,
-          access_level: null,
-          mfa_enabled: true,
-          created_at: "2024-02-20T14:45:00Z",
-          updated_at: "2024-06-12T16:30:00Z",
-          wallet: { id: "w2", profile_id: "2", balance: 89000, currency: "NGN", is_active: true, last_updated: "2024-06-14T09:00:00Z", created_at: "", updated_at: "" },
-          savings: { id: "s2", profile_id: "2", total_saved: 680000, monthly_savings: 25000, first_savings_date: "2024-02-20", consecutive_months: 4, last_savings_date: "2024-06-14", created_at: "", updated_at: "" },
-        },
-        {
-          id: "3",
-          user_id: "USR-003",
-          email: "olumide.adeyemi@email.com",
-          phone: "+2348055551234",
-          name: "Olumide Adeyemi",
-          role: "member",
-          is_active: true,
-          is_flagged: true,
-          flagged_reason: "Suspicious activity detected",
-          kyc_verified: false,
-          department: null,
-          access_level: null,
-          mfa_enabled: false,
-          created_at: "2024-03-10T09:15:00Z",
-          updated_at: "2024-06-11T11:20:00Z",
-          wallet: { id: "w3", profile_id: "3", balance: 12500, currency: "NGN", is_active: true, last_updated: "2024-06-13T14:00:00Z", created_at: "", updated_at: "" },
-          savings: { id: "s3", profile_id: "3", total_saved: 75000, monthly_savings: 15000, first_savings_date: "2024-03-10", consecutive_months: 2, last_savings_date: "2024-06-13", created_at: "", updated_at: "" },
-        },
-        {
-          id: "4",
-          user_id: "USR-004",
-          email: "chinedu.okonkwo@email.com",
-          phone: "+2348166667890",
-          name: "Chinedu Okonkwo",
-          role: "admin",
-          is_active: true,
-          is_flagged: false,
-          flagged_reason: null,
-          kyc_verified: true,
-          department: "Operations",
-          access_level: "level_2",
-          mfa_enabled: true,
-          created_at: "2023-11-05T08:00:00Z",
-          updated_at: "2024-06-15T10:30:00Z",
-          wallet: { id: "w4", profile_id: "4", balance: 0, currency: "NGN", is_active: true, last_updated: "2024-06-15T10:30:00Z", created_at: "", updated_at: "" },
-          savings: undefined,
-        },
-        {
-          id: "5",
-          user_id: "USR-005",
-          email: "aisha.mohammed@email.com",
-          phone: "+2348033334567",
-          name: "Aisha Mohammed",
-          role: "member",
-          is_active: false,
-          is_flagged: false,
-          flagged_reason: null,
-          kyc_verified: true,
-          department: null,
-          access_level: null,
-          mfa_enabled: false,
-          created_at: "2024-04-18T16:20:00Z",
-          updated_at: "2024-06-08T09:45:00Z",
-          wallet: { id: "w5", profile_id: "5", balance: 45000, currency: "NGN", is_active: false, last_updated: "2024-06-08T09:45:00Z", created_at: "", updated_at: "" },
-          savings: { id: "s5", profile_id: "5", total_saved: 320000, monthly_savings: 40000, first_savings_date: "2024-04-18", consecutive_months: 3, last_savings_date: "2024-06-08", created_at: "", updated_at: "" },
-        },
-      ];
-
-      setUsers(mockUsers);
-      setTotalPages(5);
-      setLoading(false);
+      try {
+        const status = statusFilter === "active" ? "active" : statusFilter === "inactive" ? "inactive" : statusFilter === "flagged" ? "flagged" : undefined;
+        const response = await getUsers({
+          search: search || undefined,
+          role: roleFilter || undefined,
+          status,
+          page,
+          pageSize: 20,
+        });
+        
+        setUsers(response.data as UserWithDetails[]);
+        setTotalPages(response.totalPages);
+        setTotalCount(response.count);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+        setUsers([]);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchUsers();
@@ -297,7 +214,7 @@ export default function UsersPage() {
         <DataTable columns={columns} data={users} loading={loading} emptyMessage="No users found" />
 
         {/* Pagination */}
-        <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} totalCount={100} pageSize={20} />
+        <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} totalCount={totalCount} pageSize={20} />
       </div>
 
       {/* User Detail Modal */}

@@ -22,18 +22,22 @@ export default function SavingsPage() {
   useEffect(() => {
     const fetchSavings = async () => {
       setLoading(true);
-      await new Promise((resolve) => setTimeout(resolve, 800));
-
-      const mockSavings: SavingsWithProfile[] = [
-        { id: "s-1", profile_id: "1", total_saved: 1250000, monthly_savings: 50000, first_savings_date: "2024-01-15", consecutive_months: 6, last_savings_date: "2024-06-15", created_at: "2024-01-15T00:00:00Z", updated_at: "2024-06-15T00:00:00Z", profile: { id: "1", user_id: "USR-001", email: "adebayo@email.com", phone: "+2348012345678", name: "Adebayo Johnson", role: "member", is_active: true, is_flagged: false, flagged_reason: null, kyc_verified: true, department: null, access_level: null, mfa_enabled: false, created_at: "", updated_at: "" } },
-        { id: "s-2", profile_id: "2", total_saved: 680000, monthly_savings: 25000, first_savings_date: "2024-02-20", consecutive_months: 4, last_savings_date: "2024-06-14", created_at: "2024-02-20T00:00:00Z", updated_at: "2024-06-14T00:00:00Z", profile: { id: "2", user_id: "USR-002", email: "fatima@email.com", phone: "+2348098765432", name: "Fatima Ibrahim", role: "member", is_active: true, is_flagged: false, flagged_reason: null, kyc_verified: true, department: null, access_level: null, mfa_enabled: true, created_at: "", updated_at: "" } },
-        { id: "s-3", profile_id: "3", total_saved: 75000, monthly_savings: 15000, first_savings_date: "2024-03-10", consecutive_months: 2, last_savings_date: "2024-06-13", created_at: "2024-03-10T00:00:00Z", updated_at: "2024-06-13T00:00:00Z", profile: { id: "3", user_id: "USR-003", email: "olumide@email.com", phone: "+2348055551234", name: "Olumide Adeyemi", role: "member", is_active: true, is_flagged: false, flagged_reason: null, kyc_verified: true, department: null, access_level: null, mfa_enabled: false, created_at: "", updated_at: "" } },
-        { id: "s-4", profile_id: "5", total_saved: 320000, monthly_savings: 40000, first_savings_date: "2024-04-18", consecutive_months: 3, last_savings_date: "2024-06-08", created_at: "2024-04-18T00:00:00Z", updated_at: "2024-06-08T00:00:00Z", profile: { id: "5", user_id: "USR-005", email: "aisha@email.com", phone: "+2348033334567", name: "Aisha Mohammed", role: "member", is_active: true, is_flagged: false, flagged_reason: null, kyc_verified: true, department: null, access_level: null, mfa_enabled: false, created_at: "", updated_at: "" } },
-      ];
-
-      setSavings(mockSavings);
-      setTotalPages(10);
-      setLoading(false);
+      try {
+        const { getSavings } = await import("@/lib/db-service");
+        const response = await getSavings({
+          search: search || undefined,
+          page,
+          pageSize: 20,
+        });
+        
+        setSavings(response.data as SavingsWithProfile[]);
+        setTotalPages(response.totalPages);
+      } catch (error) {
+        console.error("Error fetching savings:", error);
+        setSavings([]);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchSavings();

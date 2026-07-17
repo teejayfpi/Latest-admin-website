@@ -12,17 +12,16 @@ export default function InvestmentsPage() {
   useEffect(() => {
     const fetchPools = async () => {
       setLoading(true);
-      await new Promise((resolve) => setTimeout(resolve, 800));
-
-      const mockPools = [
-        { id: "pool-1", name: "Premium Savings Pool", description: "High-yield savings pool for verified members", min_amount: 50000, max_amount: 5000000, interest_rate: 15, tenure_days: 365, total_slots: 100, filled_slots: 78, status: "active", start_date: "2024-01-01", end_date: "2024-12-31", created_at: "2024-01-01T00:00:00Z" },
-        { id: "pool-2", name: "Business Growth Pool", description: "Investment pool for business expansion loans", min_amount: 100000, max_amount: 10000000, interest_rate: 18, tenure_days: 180, total_slots: 50, filled_slots: 42, status: "active", start_date: "2024-03-01", end_date: "2024-08-31", created_at: "2024-03-01T00:00:00Z" },
-        { id: "pool-3", name: "Emergency Fund Pool", description: "Quick access emergency loans", min_amount: 10000, max_amount: 500000, interest_rate: 10, tenure_days: 90, total_slots: 200, filled_slots: 200, status: "closed", start_date: "2024-02-01", end_date: "2024-04-30", created_at: "2024-02-01T00:00:00Z" },
-        { id: "pool-4", name: "Fixed Income Pool", description: "Stable returns with fixed income securities", min_amount: 250000, max_amount: 25000000, interest_rate: 12, tenure_days: 180, total_slots: 75, filled_slots: 35, status: "upcoming", start_date: "2024-07-01", end_date: "2024-12-31", created_at: "2024-06-15T00:00:00Z" },
-      ];
-
-      setPools(mockPools);
-      setLoading(false);
+      try {
+        const { getInvestmentPools } = await import("@/lib/db-service");
+        const data = await getInvestmentPools();
+        setPools(data);
+      } catch (error) {
+        console.error("Error fetching investment pools:", error);
+        setPools([]);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchPools();

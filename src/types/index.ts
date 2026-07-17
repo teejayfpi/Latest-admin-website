@@ -313,11 +313,11 @@ export type PaymentMethod = "bank_transfer" | "ussd" | "pos" | "cash_deposit" | 
 export interface DepositRequest {
   id: string;
   profile_id: string;
-  payment_type: PaymentProofType;
+  payment_type: PaymentProofType | string;
   amount: number;
   currency: string;
   payment_date: string;
-  payment_method: PaymentMethod | null;
+  payment_method: PaymentMethod | string | null;
   receiving_bank: string | null;
   bank_account_name: string | null;
   bank_account_number: string | null;

@@ -16,19 +16,21 @@ export default function AuditLogsPage() {
   useEffect(() => {
     const fetchLogs = async () => {
       setLoading(true);
-      await new Promise((resolve) => setTimeout(resolve, 800));
-
-      const mockLogs = [
-        { id: "log-1", actor: { name: "System Admin", role: "superadmin" }, action: "user.update", entity_type: "profile", entity_id: "1", ip_address: "192.168.1.1", created_at: "2024-06-15T10:30:00Z", changes: { is_active: { from: false, to: true } } },
-        { id: "log-2", actor: { name: "KYC Reviewer", role: "staff" }, action: "kyc.approve", entity_type: "kyc", entity_id: "kyc-1", ip_address: "192.168.1.2", created_at: "2024-06-15T09:15:00Z", changes: { status: { from: "pending", to: "verified" } } },
-        { id: "log-3", actor: { name: "System Admin", role: "superadmin" }, action: "loan.approve", entity_type: "loan", entity_id: "loan-1", ip_address: "192.168.1.1", created_at: "2024-06-14T16:00:00Z", changes: { status: { from: "pending", to: "approved" } } },
-        { id: "log-4", actor: { name: "KYC Reviewer", role: "staff" }, action: "user.flag", entity_type: "profile", entity_id: "3", ip_address: "192.168.1.2", created_at: "2024-06-14T11:30:00Z", changes: { is_flagged: { from: false, to: true } } },
-        { id: "log-5", actor: { name: "System Admin", role: "superadmin" }, action: "settings.update", entity_type: "system_settings", entity_id: "settings-1", ip_address: "192.168.1.1", created_at: "2024-06-13T08:00:00Z", changes: { maintenance_mode: { from: false, to: true } } },
-      ];
-
-      setLogs(mockLogs);
-      setTotalPages(10);
-      setLoading(false);
+      try {
+        const { getAuditLogs } = await import("@/lib/db-service");
+        const response = await getAuditLogs({
+          page,
+          pageSize: 20,
+        });
+        
+        setLogs(response.data);
+        setTotalPages(response.totalPages);
+      } catch (error) {
+        console.error("Error fetching audit logs:", error);
+        setLogs([]);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchLogs();

@@ -33,20 +33,24 @@ export default function TransactionsPage() {
   useEffect(() => {
     const fetchTransactions = async () => {
       setLoading(true);
-      await new Promise((resolve) => setTimeout(resolve, 800));
-
-      const mockTransactions: TransactionWithProfile[] = [
-        { id: "tx-1", profile_id: "1", wallet_id: "w1", type: "deposit", amount: 50000, balance_before: 195000, balance_after: 245000, status: "completed", reference: "TXN-001234", description: "Monthly contribution", metadata: {}, processed_at: "2024-06-15T10:00:00Z", created_at: "2024-06-15T10:00:00Z", profile: { id: "1", user_id: "USR-001", email: "adebayo@email.com", phone: "+2348012345678", name: "Adebayo Johnson", role: "member", is_active: true, is_flagged: false, flagged_reason: null, kyc_verified: true, department: null, access_level: null, mfa_enabled: false, created_at: "", updated_at: "" } },
-        { id: "tx-2", profile_id: "2", wallet_id: "w2", type: "withdrawal", amount: 25000, balance_before: 114000, balance_after: 89000, status: "completed", reference: "TXN-001235", description: "ATM withdrawal", metadata: {}, processed_at: "2024-06-15T09:30:00Z", created_at: "2024-06-15T09:30:00Z", profile: { id: "2", user_id: "USR-002", email: "fatima@email.com", phone: "+2348098765432", name: "Fatima Ibrahim", role: "member", is_active: true, is_flagged: false, flagged_reason: null, kyc_verified: true, department: null, access_level: null, mfa_enabled: true, created_at: "", updated_at: "" } },
-        { id: "tx-3", profile_id: "1", wallet_id: "w1", type: "loan_disbursement", amount: 500000, balance_before: 245000, balance_after: 745000, status: "completed", reference: "TXN-001236", description: "Quick Loan disbursement", metadata: {}, processed_at: "2024-06-03T16:00:00Z", created_at: "2024-06-03T16:00:00Z", profile: { id: "1", user_id: "USR-001", email: "adebayo@email.com", phone: "+2348012345678", name: "Adebayo Johnson", role: "member", is_active: true, is_flagged: false, flagged_reason: null, kyc_verified: true, department: null, access_level: null, mfa_enabled: false, created_at: "", updated_at: "" } },
-        { id: "tx-4", profile_id: "3", wallet_id: "w3", type: "savings", amount: 15000, balance_before: 60000, balance_after: 75000, status: "completed", reference: "TXN-001237", description: "Savings contribution", metadata: {}, processed_at: "2024-06-14T14:00:00Z", created_at: "2024-06-14T14:00:00Z", profile: { id: "3", user_id: "USR-003", email: "olumide@email.com", phone: "+2348055551234", name: "Olumide Adeyemi", role: "member", is_active: true, is_flagged: false, flagged_reason: null, kyc_verified: true, department: null, access_level: null, mfa_enabled: false, created_at: "", updated_at: "" } },
-        { id: "tx-5", profile_id: "4", wallet_id: "w4", type: "deposit", amount: 100000, balance_before: 0, balance_after: 100000, status: "pending", reference: "TXN-001238", description: "Initial deposit", metadata: {}, processed_at: null, created_at: "2024-06-15T11:00:00Z", profile: { id: "4", user_id: "USR-004", email: "chinedu@email.com", phone: "+2348166667890", name: "Chinedu Okonkwo", role: "member", is_active: true, is_flagged: false, flagged_reason: null, kyc_verified: true, department: null, access_level: null, mfa_enabled: true, created_at: "", updated_at: "" } },
-        { id: "tx-6", profile_id: "5", wallet_id: "w5", type: "loan_repayment", amount: 137500, balance_before: 192500, balance_after: 55000, status: "completed", reference: "TXN-001239", description: "Loan repayment - June", metadata: {}, processed_at: "2024-06-03T08:00:00Z", created_at: "2024-06-03T08:00:00Z", profile: { id: "5", user_id: "USR-005", email: "aisha@email.com", phone: "+2348033334567", name: "Aisha Mohammed", role: "member", is_active: true, is_flagged: false, flagged_reason: null, kyc_verified: true, department: null, access_level: null, mfa_enabled: false, created_at: "", updated_at: "" } },
-      ];
-
-      setTransactions(mockTransactions);
-      setTotalPages(10);
-      setLoading(false);
+      try {
+        const { getTransactions } = await import("@/lib/db-service");
+        const response = await getTransactions({
+          type: typeFilter || undefined,
+          status: statusFilter || undefined,
+          search: search || undefined,
+          page,
+          pageSize: 20,
+        });
+        
+        setTransactions(response.data as TransactionWithProfile[]);
+        setTotalPages(response.totalPages);
+      } catch (error) {
+        console.error("Error fetching transactions:", error);
+        setTransactions([]);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchTransactions();

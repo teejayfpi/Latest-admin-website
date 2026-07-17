@@ -30,98 +30,23 @@ export default function KYCPage() {
   useEffect(() => {
     const fetchKYC = async () => {
       setLoading(true);
-      await new Promise((resolve) => setTimeout(resolve, 800));
-
-      const mockKYC: KYCWithProfile[] = [
-        {
-          id: "kyc-1",
-          profile_id: "1",
-          status: "pending",
-          verified: false,
-          verified_at: null,
-          verification_level: 1,
-          rejection_reason: null,
-          national_id: "NIN-123456789",
-          address: "15 Lagos Street, Victoria Island, Lagos",
-          date_of_birth: "1990-05-15",
-          personal_info: { firstName: "Adebayo", lastName: "Johnson", gender: "Male" },
-          contact_info: { email: "adebayo@email.com", phone: "+2348012345678" },
-          employment_info: { employer: "Tech Corp Ltd", position: "Software Engineer", income: 500000 },
-          bank_info: { bank: "First Bank", accountNumber: "3014567890" },
-          selfie: { url: "/selfie-1.jpg" },
-          submitted_at: "2024-06-14T10:30:00Z",
-          created_at: "2024-06-14T10:30:00Z",
-          updated_at: "2024-06-14T10:30:00Z",
-          profile: { id: "1", user_id: "USR-001", email: "adebayo@email.com", phone: "+2348012345678", name: "Adebayo Johnson", role: "member", is_active: true, is_flagged: false, flagged_reason: null, kyc_verified: false, department: null, access_level: null, mfa_enabled: false, created_at: "", updated_at: "" },
-        },
-        {
-          id: "kyc-2",
-          profile_id: "2",
-          status: "in_review",
-          verified: false,
-          verified_at: null,
-          verification_level: 1,
-          rejection_reason: null,
-          national_id: "NIN-987654321",
-          address: "42 Abuja Avenue, Maitama, Abuja",
-          date_of_birth: "1985-08-22",
-          personal_info: { firstName: "Fatima", lastName: "Ibrahim", gender: "Female" },
-          contact_info: { email: "fatima@email.com", phone: "+2348098765432" },
-          employment_info: { employer: "Finance Group", position: "Manager", income: 750000 },
-          bank_info: { bank: "GTBank", accountNumber: "2045678901" },
-          selfie: { url: "/selfie-2.jpg" },
-          submitted_at: "2024-06-13T14:00:00Z",
-          created_at: "2024-06-13T14:00:00Z",
-          updated_at: "2024-06-14T09:00:00Z",
-          profile: { id: "2", user_id: "USR-002", email: "fatima@email.com", phone: "+2348098765432", name: "Fatima Ibrahim", role: "member", is_active: true, is_flagged: false, flagged_reason: null, kyc_verified: false, department: null, access_level: null, mfa_enabled: true, created_at: "", updated_at: "" },
-        },
-        {
-          id: "kyc-3",
-          profile_id: "3",
-          status: "verified",
-          verified: true,
-          verified_at: "2024-06-12T16:00:00Z",
-          verification_level: 2,
-          rejection_reason: null,
-          national_id: "NIN-456789123",
-          address: "28 Port Harcourt Road, Warri",
-          date_of_birth: "1992-03-10",
-          personal_info: { firstName: "Olumide", lastName: "Adeyemi", gender: "Male" },
-          contact_info: { email: "olumide@email.com", phone: "+2348055551234" },
-          employment_info: { employer: "Oil & Gas Co", position: "Engineer", income: 800000 },
-          bank_info: { bank: "UBA", accountNumber: "2089012345" },
-          selfie: { url: "/selfie-3.jpg" },
-          submitted_at: "2024-06-10T09:00:00Z",
-          created_at: "2024-06-10T09:00:00Z",
-          updated_at: "2024-06-12T16:00:00Z",
-          profile: { id: "3", user_id: "USR-003", email: "olumide@email.com", phone: "+2348055551234", name: "Olumide Adeyemi", role: "member", is_active: true, is_flagged: false, flagged_reason: null, kyc_verified: true, department: null, access_level: null, mfa_enabled: false, created_at: "", updated_at: "" },
-        },
-        {
-          id: "kyc-4",
-          profile_id: "4",
-          status: "rejected",
-          verified: false,
-          verified_at: null,
-          verification_level: 1,
-          rejection_reason: "Document image is blurry and unreadable",
-          national_id: "NIN-111222333",
-          address: "10 Kano Street, Ikeja, Lagos",
-          date_of_birth: "1988-12-05",
-          personal_info: { firstName: "Chinedu", lastName: "Okonkwo", gender: "Male" },
-          contact_info: { email: "chinedu@email.com", phone: "+2348166667890" },
-          employment_info: { employer: "Logistics Ltd", position: "Supervisor", income: 350000 },
-          bank_info: { bank: "Access Bank", accountNumber: "2123456789" },
-          selfie: { url: "/selfie-4.jpg" },
-          submitted_at: "2024-06-08T11:30:00Z",
-          created_at: "2024-06-08T11:30:00Z",
-          updated_at: "2024-06-11T14:00:00Z",
-          profile: { id: "4", user_id: "USR-004", email: "chinedu@email.com", phone: "+2348166667890", name: "Chinedu Okonkwo", role: "member", is_active: true, is_flagged: false, flagged_reason: null, kyc_verified: false, department: null, access_level: null, mfa_enabled: true, created_at: "", updated_at: "" },
-        },
-      ];
-
-      setKycList(mockKYC);
-      setTotalPages(3);
-      setLoading(false);
+      try {
+        const { getKYCApplications } = await import("@/lib/db-service");
+        const response = await getKYCApplications({
+          status: statusFilter || undefined,
+          search: search || undefined,
+          page,
+          pageSize: 20,
+        });
+        
+        setKycList(response.data as KYCWithProfile[]);
+        setTotalPages(response.totalPages);
+      } catch (error) {
+        console.error("Error fetching KYC:", error);
+        setKycList([]);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchKYC();
@@ -129,16 +54,27 @@ export default function KYCPage() {
 
   const handleApprove = async () => {
     if (!actionModal) return;
-    // In production, this would call Supabase
-    setKycList((prev) => prev.map((k) => k.id === actionModal.kyc.id ? { ...k, status: "verified" as const } : k));
-    setActionModal(null);
+    try {
+      const { updateKYCStatus } = await import("@/lib/db-service");
+      await updateKYCStatus(actionModal.kyc.id, "verified");
+      setKycList((prev) => prev.map((k) => k.id === actionModal.kyc.id ? { ...k, status: "verified" as const } : k));
+      setActionModal(null);
+    } catch (error) {
+      console.error("Error approving KYC:", error);
+    }
   };
 
   const handleReject = async () => {
     if (!actionModal) return;
-    setKycList((prev) => prev.map((k) => k.id === actionModal.kyc.id ? { ...k, status: "rejected" as const, rejection_reason: rejectionReason } : k));
-    setActionModal(null);
-    setRejectionReason("");
+    try {
+      const { updateKYCStatus } = await import("@/lib/db-service");
+      await updateKYCStatus(actionModal.kyc.id, "rejected", rejectionReason);
+      setKycList((prev) => prev.map((k) => k.id === actionModal.kyc.id ? { ...k, status: "rejected" as const, rejection_reason: rejectionReason } : k));
+      setActionModal(null);
+      setRejectionReason("");
+    } catch (error) {
+      console.error("Error rejecting KYC:", error);
+    }
   };
 
   const columns = [

@@ -32,82 +32,64 @@ export default function LoansPage() {
   useEffect(() => {
     const fetchLoans = async () => {
       setLoading(true);
-      await new Promise((resolve) => setTimeout(resolve, 800));
-
-      const mockLoans: LoanWithProfile[] = [
-        {
-          id: "loan-1", profile_id: "1", loan_type: "Quick Loan", principal_amount: 500000, interest_rate: 10,
-          tenure_months: 4, monthly_repayment: 137500, total_repayment: 550000, total_interest: 50000,
-          amount_disbursed: 500000, outstanding_balance: 412500, status: "active", repayment_status: "active",
-          application_date: "2024-06-01T10:00:00Z", approval_date: "2024-06-03T14:00:00Z",
-          disbursement_date: "2024-06-03T16:00:00Z", first_repayment_date: "2024-07-03",
-          next_repayment_date: "2024-06-17T00:00:00Z", maturity_date: "2024-10-03", rejection_reason: null,
-          approved_by: "admin-1", notes: null, created_at: "2024-06-01T10:00:00Z", updated_at: "2024-06-03T16:00:00Z",
-          profile: { id: "1", user_id: "USR-001", email: "adebayo@email.com", phone: "+2348012345678", name: "Adebayo Johnson", role: "member", is_active: true, is_flagged: false, flagged_reason: null, kyc_verified: true, department: null, access_level: null, mfa_enabled: false, created_at: "", updated_at: "" },
-        },
-        {
-          id: "loan-2", profile_id: "2", loan_type: "Term Loan", principal_amount: 2000000, interest_rate: 15,
-          tenure_months: 12, monthly_repayment: 191667, total_repayment: 2300000, total_interest: 300000,
-          amount_disbursed: 0, outstanding_balance: 2000000, status: "pending", repayment_status: "pending",
-          application_date: "2024-06-14T08:30:00Z", approval_date: null, disbursement_date: null,
-          first_repayment_date: null, next_repayment_date: null, maturity_date: null, rejection_reason: null,
-          approved_by: null, notes: null, created_at: "2024-06-14T08:30:00Z", updated_at: "2024-06-14T08:30:00Z",
-          profile: { id: "2", user_id: "USR-002", email: "fatima@email.com", phone: "+2348098765432", name: "Fatima Ibrahim", role: "member", is_active: true, is_flagged: false, flagged_reason: null, kyc_verified: true, department: null, access_level: null, mfa_enabled: true, created_at: "", updated_at: "" },
-        },
-        {
-          id: "loan-3", profile_id: "3", loan_type: "Emergency Loan", principal_amount: 100000, interest_rate: 8,
-          tenure_months: 2, monthly_repayment: 54000, total_repayment: 108000, total_interest: 8000,
-          amount_disbursed: 100000, outstanding_balance: 0, status: "completed", repayment_status: "completed",
-          application_date: "2024-05-01T09:00:00Z", approval_date: "2024-05-02T10:00:00Z",
-          disbursement_date: "2024-05-02T12:00:00Z", first_repayment_date: "2024-06-02", next_repayment_date: null,
-          maturity_date: "2024-07-02", rejection_reason: null, approved_by: "admin-1", notes: "Fully repaid", created_at: "2024-05-01T09:00:00Z", updated_at: "2024-07-02T00:00:00Z",
-          profile: { id: "3", user_id: "USR-003", email: "olumide@email.com", phone: "+2348055551234", name: "Olumide Adeyemi", role: "member", is_active: true, is_flagged: false, flagged_reason: null, kyc_verified: true, department: null, access_level: null, mfa_enabled: false, created_at: "", updated_at: "" },
-        },
-        {
-          id: "loan-4", profile_id: "4", loan_type: "Business Loan", principal_amount: 3000000, interest_rate: 18,
-          tenure_months: 24, monthly_repayment: 152500, total_repayment: 3660000, total_interest: 660000,
-          amount_disbursed: 0, outstanding_balance: 3000000, status: "pending", repayment_status: "pending",
-          application_date: "2024-06-13T11:00:00Z", approval_date: null, disbursement_date: null,
-          first_repayment_date: null, next_repayment_date: null, maturity_date: null, rejection_reason: null,
-          approved_by: null, notes: null, created_at: "2024-06-13T11:00:00Z", updated_at: "2024-06-13T11:00:00Z",
-          profile: { id: "4", user_id: "USR-004", email: "chinedu@email.com", phone: "+2348166667890", name: "Chinedu Okonkwo", role: "member", is_active: true, is_flagged: false, flagged_reason: null, kyc_verified: true, department: null, access_level: null, mfa_enabled: true, created_at: "", updated_at: "" },
-        },
-        {
-          id: "loan-5", profile_id: "5", loan_type: "Salary Advance", principal_amount: 75000, interest_rate: 5,
-          tenure_months: 1, monthly_repayment: 78750, total_repayment: 78750, total_interest: 3750,
-          amount_disbursed: 75000, outstanding_balance: 78750, status: "active", repayment_status: "partial",
-          application_date: "2024-06-10T15:00:00Z", approval_date: "2024-06-10T16:00:00Z",
-          disbursement_date: "2024-06-10T17:00:00Z", first_repayment_date: "2024-06-25", next_repayment_date: "2024-06-25",
-          maturity_date: "2024-07-10", rejection_reason: null, approved_by: "admin-2", notes: null, created_at: "2024-06-10T15:00:00Z", updated_at: "2024-06-10T17:00:00Z",
-          profile: { id: "5", user_id: "USR-005", email: "aisha@email.com", phone: "+2348033334567", name: "Aisha Mohammed", role: "member", is_active: true, is_flagged: false, flagged_reason: null, kyc_verified: true, department: null, access_level: null, mfa_enabled: false, created_at: "", updated_at: "" },
-        },
-      ];
-
-      setLoans(mockLoans);
-      setTotalPages(4);
-      setLoading(false);
+      try {
+        const { getLoans, updateLoanStatus } = await import("@/lib/db-service");
+        const response = await getLoans({
+          status: statusFilter || undefined,
+          type: typeFilter || undefined,
+          search: search || undefined,
+          page,
+          pageSize: 20,
+        });
+        
+        setLoans(response.data as LoanWithProfile[]);
+        setTotalPages(response.totalPages);
+      } catch (error) {
+        console.error("Error fetching loans:", error);
+        setLoans([]);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchLoans();
   }, [statusFilter, typeFilter, search, page]);
 
-  const handleApprove = () => {
+  const handleApprove = async () => {
     if (!actionModal) return;
-    setLoans((prev) => prev.map((l) => l.id === actionModal.loan.id ? { ...l, status: "approved" as const, approval_date: new Date().toISOString() } : l));
-    setActionModal(null);
+    try {
+      const { updateLoanStatus } = await import("@/lib/db-service");
+      await updateLoanStatus(actionModal.loan.id, "approved");
+      setLoans((prev) => prev.map((l) => l.id === actionModal.loan.id ? { ...l, status: "approved" as any, approval_date: new Date().toISOString() } : l));
+      setActionModal(null);
+    } catch (error) {
+      console.error("Error approving loan:", error);
+    }
   };
 
-  const handleDisburse = () => {
+  const handleDisburse = async () => {
     if (!actionModal) return;
-    setLoans((prev) => prev.map((l) => l.id === actionModal.loan.id ? { ...l, status: "disbursed" as any, disbursement_date: new Date().toISOString(), amount_disbursed: actionModal.loan.principal_amount, outstanding_balance: actionModal.loan.total_repayment } : l));
-    setActionModal(null);
+    try {
+      const { updateLoanStatus } = await import("@/lib/db-service");
+      await updateLoanStatus(actionModal.loan.id, "disbursed");
+      setLoans((prev) => prev.map((l) => l.id === actionModal.loan.id ? { ...l, status: "disbursed" as any, disbursement_date: new Date().toISOString(), amount_disbursed: actionModal.loan.principal_amount, outstanding_balance: actionModal.loan.total_repayment } : l));
+      setActionModal(null);
+    } catch (error) {
+      console.error("Error disbursing loan:", error);
+    }
   };
 
-  const handleReject = () => {
+  const handleReject = async () => {
     if (!actionModal) return;
-    setLoans((prev) => prev.map((l) => l.id === actionModal.loan.id ? { ...l, status: "rejected" as any, rejection_reason: rejectionReason } : l));
-    setActionModal(null);
-    setRejectionReason("");
+    try {
+      const { updateLoanStatus } = await import("@/lib/db-service");
+      await updateLoanStatus(actionModal.loan.id, "rejected", rejectionReason);
+      setLoans((prev) => prev.map((l) => l.id === actionModal.loan.id ? { ...l, status: "rejected" as any, rejection_reason: rejectionReason } : l));
+      setActionModal(null);
+      setRejectionReason("");
+    } catch (error) {
+      console.error("Error rejecting loan:", error);
+    }
   };
 
   const columns = [

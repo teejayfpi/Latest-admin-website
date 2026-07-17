@@ -53,17 +53,24 @@ export default function DepositsPage() {
   useEffect(() => {
     const fetchDeposits = async () => {
       setLoading(true);
-      await new Promise((resolve) => setTimeout(resolve, 800));
-      const mockDeposits: DepositRequest[] = [
-        { id: "dep-1", profile_id: "1", amount: 50000, currency: "NGN", payment_type: "monthly_contribution", payment_method: "bank_transfer", status: "pending", payment_date: "2024-06-15T10:00:00Z", receiving_bank: "First Bank of Nigeria", bank_account_name: "Coopvest Africa", bank_account_number: "3014567890", transaction_reference: "TRX-2024-001234", proof_url: "/proof-1.jpg", proof_type: "image/jpeg", original_filename: "transfer-receipt.jpg", rejection_reason: "", admin_notes: "", member_note: "Monthly contribution for June 2024", approved_at: "", approved_by: "", created_at: "2024-06-15T10:30:00Z", updated_at: "2024-06-15T10:30:00Z", profile: { id: "1", name: "Adebayo Johnson", email: "adebayo@email.com", user_id: "USR-001" } },
-        { id: "dep-2", profile_id: "2", amount: 100000, currency: "NGN", payment_type: "monthly_contribution", payment_method: "bank_transfer", status: "under_review", payment_date: "2024-06-14T14:00:00Z", receiving_bank: "GTBank", bank_account_name: "Coopvest Africa", bank_account_number: "2045678901", transaction_reference: "TRX-2024-001233", proof_url: "/proof-2.jpg", proof_type: "image/jpeg", original_filename: "screenshot.jpg", rejection_reason: "", admin_notes: "Reviewing proof of payment", member_note: "Contribution for Q2 2024", approved_at: "", approved_by: "", created_at: "2024-06-14T14:30:00Z", updated_at: "2024-06-15T09:00:00Z", profile: { id: "2", name: "Fatima Ibrahim", email: "fatima@email.com", user_id: "USR-002" } },
-        { id: "dep-3", profile_id: "3", amount: 25000, currency: "NGN", payment_type: "registration_fee", payment_method: "ussd", status: "verified", payment_date: "2024-06-13T11:00:00Z", receiving_bank: "UBA", bank_account_name: "Coopvest Africa", bank_account_number: "2089012345", transaction_reference: "TRX-2024-001232", proof_url: "", proof_type: "", original_filename: "", rejection_reason: "", admin_notes: "Auto-verified via USSD", member_note: "New member registration fee", approved_at: "2024-06-13T11:05:00Z", approved_by: "system", created_at: "2024-06-13T11:00:00Z", updated_at: "2024-06-13T11:05:00Z", profile: { id: "3", name: "Olumide Adeyemi", email: "olumide@email.com", user_id: "USR-003" } },
-        { id: "dep-4", profile_id: "4", amount: 75000, currency: "NGN", payment_type: "loan_repayment", payment_method: "bank_transfer", status: "rejected", payment_date: "2024-06-12T16:00:00Z", receiving_bank: "Access Bank", bank_account_name: "Coopvest Africa", bank_account_number: "2123456789", transaction_reference: "TRX-2024-001231", proof_url: "/proof-4.jpg", proof_type: "image/jpeg", original_filename: "bank-slip.jpg", rejection_reason: "Transaction amount does not match loan repayment schedule. Expected ₦54,000.", admin_notes: "Incorrect amount - partial payment not accepted", member_note: "Loan repayment installment", approved_at: "", approved_by: "", created_at: "2024-06-12T16:30:00Z", updated_at: "2024-06-13T10:00:00Z", profile: { id: "4", name: "Chinedu Okonkwo", email: "chinedu@email.com", user_id: "USR-004" } },
-        { id: "dep-5", profile_id: "5", amount: 150000, currency: "NGN", payment_type: "investment", payment_method: "bank_transfer", status: "pending", payment_date: "2024-06-15T08:00:00Z", receiving_bank: "First Bank of Nigeria", bank_account_name: "Coopvest Africa", bank_account_number: "3014567890", transaction_reference: "TRX-2024-001235", proof_url: "/proof-5.jpg", proof_type: "image/jpeg", original_filename: "investment-deposit.jpg", rejection_reason: "", admin_notes: "", member_note: "Investment pool contribution", approved_at: "", approved_by: "", created_at: "2024-06-15T08:30:00Z", updated_at: "2024-06-15T08:30:00Z", profile: { id: "5", name: "Aisha Mohammed", email: "aisha@email.com", user_id: "USR-005" } },
-      ];
-      setDeposits(mockDeposits);
-      setTotalPages(5);
-      setLoading(false);
+      try {
+        const { getDeposits } = await import("@/lib/db-service");
+        const response = await getDeposits({
+          search: search || undefined,
+          status: statusFilter || undefined,
+          type: typeFilter || undefined,
+          page,
+          pageSize: 20,
+        });
+        
+        setDeposits(response.data as any);
+        setTotalPages(response.totalPages);
+      } catch (error) {
+        console.error("Error fetching deposits:", error);
+        setDeposits([]);
+      } finally {
+        setLoading(false);
+      }
     };
     fetchDeposits();
   }, [search, statusFilter, typeFilter, page]);
@@ -71,34 +78,55 @@ export default function DepositsPage() {
   const handleApprove = async () => {
     if (!actionModal) return;
     setProcessing(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setDeposits((prev) => prev.map((d) => d.id === actionModal.deposit.id ? { ...d, status: "verified" as const, admin_notes: adminNotes, approved_at: new Date().toISOString(), approved_by: "admin" } : d));
-    setActionModal(null);
-    setAdminNotes("");
-    setProcessing(false);
-    toast.success("Deposit approved and wallet credited!");
+    try {
+      const { updateDepositStatus } = await import("@/lib/db-service");
+      await updateDepositStatus(actionModal.deposit.id, "verified", adminNotes);
+      setDeposits((prev) => prev.map((d) => d.id === actionModal.deposit.id ? { ...d, status: "verified" as any, admin_notes: adminNotes, approved_at: new Date().toISOString(), approved_by: "admin" } : d));
+      setActionModal(null);
+      setAdminNotes("");
+      toast.success("Deposit approved and wallet credited!");
+    } catch (error) {
+      console.error("Error approving deposit:", error);
+      toast.error("Failed to approve deposit");
+    } finally {
+      setProcessing(false);
+    }
   };
 
   const handleReject = async () => {
     if (!actionModal) return;
     setProcessing(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setDeposits((prev) => prev.map((d) => d.id === actionModal.deposit.id ? { ...d, status: "rejected" as const, rejection_reason: adminNotes } : d));
-    setActionModal(null);
-    setAdminNotes("");
-    setProcessing(false);
-    toast.success("Deposit rejected");
+    try {
+      const { updateDepositStatus } = await import("@/lib/db-service");
+      await updateDepositStatus(actionModal.deposit.id, "rejected", adminNotes);
+      setDeposits((prev) => prev.map((d) => d.id === actionModal.deposit.id ? { ...d, status: "rejected" as any, rejection_reason: adminNotes } : d));
+      setActionModal(null);
+      setAdminNotes("");
+      toast.success("Deposit rejected");
+    } catch (error) {
+      console.error("Error rejecting deposit:", error);
+      toast.error("Failed to reject deposit");
+    } finally {
+      setProcessing(false);
+    }
   };
 
   const handleMarkReview = async () => {
     if (!actionModal) return;
     setProcessing(true);
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    setDeposits((prev) => prev.map((d) => d.id === actionModal.deposit.id ? { ...d, status: "under_review" as const, admin_notes: adminNotes } : d));
-    setActionModal(null);
-    setAdminNotes("");
-    setProcessing(false);
-    toast.success("Marked as under review");
+    try {
+      const { updateDepositStatus } = await import("@/lib/db-service");
+      await updateDepositStatus(actionModal.deposit.id, "under_review", adminNotes);
+      setDeposits((prev) => prev.map((d) => d.id === actionModal.deposit.id ? { ...d, status: "under_review" as any, admin_notes: adminNotes } : d));
+      setActionModal(null);
+      setAdminNotes("");
+      toast.success("Marked as under review");
+    } catch (error) {
+      console.error("Error marking deposit for review:", error);
+      toast.error("Failed to update deposit status");
+    } finally {
+      setProcessing(false);
+    }
   };
 
   const getStatusConfig = (status: string) => {
