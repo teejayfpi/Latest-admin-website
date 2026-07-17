@@ -300,3 +300,46 @@ export interface FilterOptions {
   sortBy?: string;
   sortOrder?: "asc" | "desc";
 }
+
+// Deposit Types
+export type DepositStatus = "pending" | "under_review" | "verified" | "rejected";
+export type PaymentProofType = "monthly_contribution" | "loan_repayment" | "registration_fee" | "investment" | "other";
+export type PaymentMethod = "bank_transfer" | "ussd" | "pos" | "cash_deposit" | "card";
+
+export interface DepositRequest {
+  id: string;
+  profile_id: string;
+  payment_type: PaymentProofType;
+  amount: number;
+  currency: string;
+  payment_date: string;
+  payment_method: PaymentMethod | null;
+  receiving_bank: string | null;
+  bank_account_name: string | null;
+  bank_account_number: string | null;
+  transaction_reference: string | null;
+  proof_url: string | null;
+  proof_type: string | null;
+  original_filename: string | null;
+  file_size: number | null;
+  status: DepositStatus;
+  rejection_reason: string | null;
+  admin_notes: string | null;
+  member_note: string | null;
+  reviewed_by: string | null;
+  approved_at: string | null;
+  approved_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DepositStats {
+  total: number;
+  pending: number;
+  under_review: number;
+  verified: number;
+  rejected: number;
+  total_amount: number;
+  pending_amount: number;
+  verified_amount: number;
+}

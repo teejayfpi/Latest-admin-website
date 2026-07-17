@@ -19,6 +19,7 @@ import {
   Shield,
   Megaphone,
   Activity,
+  DollarSign,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -26,6 +27,7 @@ const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Users", href: "/users", icon: Users },
   { name: "KYC Verification", href: "/kyc", icon: FileCheck },
+  { name: "Deposits", href: "/deposits", icon: DollarSign },
   { name: "Loans", href: "/loans", icon: CreditCard },
   { name: "Transactions", href: "/transactions", icon: Activity },
   { name: "Savings", href: "/savings", icon: PiggyBank },

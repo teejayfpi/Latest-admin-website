@@ -13,6 +13,8 @@ import type {
   DashboardStats,
   PaginatedResponse,
   FilterOptions,
+  DepositRequest,
+  DepositStats,
 } from "@/types";
 
 // Dashboard Stats
@@ -341,6 +343,73 @@ export async function getAuditLogs(options: FilterOptions = {}): Promise<Paginat
     page,
     pageSize,
     totalPages: Math.ceil((count || 0) / pageSize),
+  };
+}
+
+// Deposits
+export async function getDeposits(options: FilterOptions = {}): Promise<PaginatedResponse<DepositRequest & { profile?: Profile }>> {
+  const { status, search, page = 1, pageSize = 20, sortBy = "created_at", sortOrder = "desc" } = options;
+
+  let query = supabaseAdmin.from("payment_proofs").select("*, profile:profiles(*)", { count: "exact" });
+
+  if (status) query = query.eq("status", status);
+  if (search) {
+    query = query.or(`transaction_reference.ilike.%${search}%,profile:profiles(name).ilike.%${search}%`);
+  }
+
+  query = query.order(sortBy as any, { ascending: sortOrder === "asc" }).range((page - 1) * pageSize, page * pageSize - 1);
+
+  const { data, count, error } = await query;
+  if (error) throw error;
+
+  return {
+    data: data as any,
+    count: count || 0,
+    page,
+    pageSize,
+    totalPages: Math.ceil((count || 0) / pageSize),
+  };
+}
+
+export async function getDepositById(id: string): Promise<DepositRequest | null> {
+  const { data, error } = await supabaseAdmin.from("payment_proofs").select("*, profile:profiles(*)").eq("id", id).single();
+  if (error || !data) return null;
+  return data;
+}
+
+export async function updateDepositStatus(id: string, status: string, adminNotes?: string, rejectionReason?: string): Promise<void> {
+  const updates: Record<string, any> = { status };
+  if (status === "verified") {
+    updates.approved_at = new Date().toISOString();
+    updates.approved_by = "admin";
+  }
+  if (adminNotes) updates.admin_notes = adminNotes;
+  if (rejectionReason) updates.rejection_reason = rejectionReason;
+  await supabaseAdmin.from("payment_proofs").update(updates).eq("id", id);
+}
+
+export async function getDepositStats(): Promise<DepositStats> {
+  const [pending, underReview, verified, rejected] = await Promise.all([
+    supabaseAdmin.from("payment_proofs").select("amount", { count: "exact", head: true }).eq("status", "pending"),
+    supabaseAdmin.from("payment_proofs").select("amount", { count: "exact", head: true }).eq("status", "under_review"),
+    supabaseAdmin.from("payment_proofs").select("amount", { count: "exact", head: true }).eq("status", "verified"),
+    supabaseAdmin.from("payment_proofs").select("amount", { count: "exact", head: true }).eq("status", "rejected"),
+  ]);
+
+  const [pendingAmountResult, verifiedAmountResult] = await Promise.all([
+    supabaseAdmin.from("payment_proofs").select("amount").in("status", ["pending", "under_review"]).then(r => r.data?.reduce((acc, d) => acc + Number(d.amount), 0) || 0),
+    supabaseAdmin.from("payment_proofs").select("amount").eq("status", "verified").then(r => r.data?.reduce((acc, d) => acc + Number(d.amount), 0) || 0),
+  ]);
+
+  return {
+    total: (pending.count || 0) + (underReview.count || 0) + (verified.count || 0) + (rejected.count || 0),
+    pending: pending.count || 0,
+    under_review: underReview.count || 0,
+    verified: verified.count || 0,
+    rejected: rejected.count || 0,
+    total_amount: pendingAmountResult + verifiedAmountResult,
+    pending_amount: pendingAmountResult,
+    verified_amount: verifiedAmountResult,
   };
 }
 
