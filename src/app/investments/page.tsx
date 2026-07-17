@@ -1,0 +1,111 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { MainLayout } from "@/components/layout/MainLayout";
+import { formatCurrency, formatDate, getInitials } from "@/lib/utils";
+import { TrendingUp, Users, DollarSign, Calendar, Eye } from "lucide-react";
+
+export default function InvestmentsPage() {
+  const [pools, setPools] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPools = async () => {
+      setLoading(true);
+      await new Promise((resolve) => setTimeout(resolve, 800));
+
+      const mockPools = [
+        { id: "pool-1", name: "Premium Savings Pool", description: "High-yield savings pool for verified members", min_amount: 50000, max_amount: 5000000, interest_rate: 15, tenure_days: 365, total_slots: 100, filled_slots: 78, status: "active", start_date: "2024-01-01", end_date: "2024-12-31", created_at: "2024-01-01T00:00:00Z" },
+        { id: "pool-2", name: "Business Growth Pool", description: "Investment pool for business expansion loans", min_amount: 100000, max_amount: 10000000, interest_rate: 18, tenure_days: 180, total_slots: 50, filled_slots: 42, status: "active", start_date: "2024-03-01", end_date: "2024-08-31", created_at: "2024-03-01T00:00:00Z" },
+        { id: "pool-3", name: "Emergency Fund Pool", description: "Quick access emergency loans", min_amount: 10000, max_amount: 500000, interest_rate: 10, tenure_days: 90, total_slots: 200, filled_slots: 200, status: "closed", start_date: "2024-02-01", end_date: "2024-04-30", created_at: "2024-02-01T00:00:00Z" },
+        { id: "pool-4", name: "Fixed Income Pool", description: "Stable returns with fixed income securities", min_amount: 250000, max_amount: 25000000, interest_rate: 12, tenure_days: 180, total_slots: 75, filled_slots: 35, status: "upcoming", start_date: "2024-07-01", end_date: "2024-12-31", created_at: "2024-06-15T00:00:00Z" },
+      ];
+
+      setPools(mockPools);
+      setLoading(false);
+    };
+
+    fetchPools();
+  }, []);
+
+  const totalInvested = pools.reduce((acc, p) => acc + (p.filled_slots * ((p.min_amount + p.max_amount) / 2)), 0);
+
+  return (
+    <MainLayout title="Investment Pools" subtitle="Manage investment pools and participations">
+      <div className="space-y-6">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          <div className="rounded-xl border border-cyan-200 bg-gradient-to-br from-cyan-50 to-blue-50 p-6">
+            <div className="flex items-center gap-3">
+              <div className="rounded-full bg-cyan-100 p-3"><TrendingUp className="h-6 w-6 text-cyan-600" /></div>
+              <div><p className="text-2xl font-bold text-slate-900">{pools.length}</p><p className="text-sm text-cyan-700">Total Pools</p></div>
+            </div>
+          </div>
+          <div className="rounded-xl border border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 p-6">
+            <div className="flex items-center gap-3">
+              <div className="rounded-full bg-green-100 p-3"><Users className="h-6 w-6 text-green-600" /></div>
+              <div><p className="text-2xl font-bold text-slate-900">{pools.filter((p) => p.status === "active").length}</p><p className="text-sm text-green-700">Active Pools</p></div>
+            </div>
+          </div>
+          <div className="rounded-xl border border-purple-200 bg-gradient-to-br from-purple-50 to-pink-50 p-6">
+            <div className="flex items-center gap-3">
+              <div className="rounded-full bg-purple-100 p-3"><DollarSign className="h-6 w-6 text-purple-600" /></div>
+              <div><p className="text-2xl font-bold text-slate-900">{formatCurrency(totalInvested / 1000000)}M</p><p className="text-sm text-purple-700">Total Value</p></div>
+            </div>
+          </div>
+          <div className="rounded-xl border border-yellow-200 bg-gradient-to-br from-yellow-50 to-orange-50 p-6">
+            <div className="flex items-center gap-3">
+              <div className="rounded-full bg-yellow-100 p-3"><Calendar className="h-6 w-6 text-yellow-600" /></div>
+              <div><p className="text-2xl font-bold text-slate-900">{pools.filter((p) => p.status === "upcoming").length}</p><p className="text-sm text-yellow-700">Upcoming</p></div>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-2">
+          {pools.map((pool) => (
+            <div key={pool.id} className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-900">{pool.name}</h3>
+                  <p className="mt-1 text-sm text-slate-500">{pool.description}</p>
+                </div>
+                <span className={`rounded-full px-3 py-1 text-xs font-medium ${pool.status === "active" ? "bg-green-100 text-green-700" : pool.status === "upcoming" ? "bg-blue-100 text-blue-700" : "bg-slate-100 text-slate-600"}`}>
+                  {pool.status}
+                </span>
+              </div>
+
+              <div className="mt-6 grid grid-cols-2 gap-4">
+                <div className="rounded-lg bg-slate-50 p-3">
+                  <p className="text-xs text-slate-500">Interest Rate</p>
+                  <p className="text-xl font-bold text-slate-900">{pool.interest_rate}%</p>
+                </div>
+                <div className="rounded-lg bg-slate-50 p-3">
+                  <p className="text-xs text-slate-500">Tenure</p>
+                  <p className="text-xl font-bold text-slate-900">{pool.tenure_days} days</p>
+                </div>
+                <div className="rounded-lg bg-slate-50 p-3">
+                  <p className="text-xs text-slate-500">Min Amount</p>
+                  <p className="text-lg font-semibold text-slate-900">{formatCurrency(pool.min_amount)}</p>
+                </div>
+                <div className="rounded-lg bg-slate-50 p-3">
+                  <p className="text-xs text-slate-500">Max Amount</p>
+                  <p className="text-lg font-semibold text-slate-900">{formatCurrency(pool.max_amount)}</p>
+                </div>
+              </div>
+
+              <div className="mt-4">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-slate-500">Filled Slots</span>
+                  <span className="font-medium text-slate-900">{pool.filled_slots} / {pool.total_slots}</span>
+                </div>
+                <div className="mt-2 h-2 w-full rounded-full bg-slate-100">
+                  <div className="h-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600" style={{ width: `${(pool.filled_slots / pool.total_slots) * 100}%` }} />
+                </div>
+                <p className="mt-2 text-xs text-slate-500">Ends: {formatDate(pool.end_date)}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </MainLayout>
+  );
+}
