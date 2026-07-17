@@ -64,13 +64,13 @@ export default function TicketsPage() {
     )},
     { key: "category", header: "Category", render: (t: TicketWithProfile) => <span className="rounded-lg bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-700">{t.category}</span> },
     { key: "priority", header: "Priority", render: (t: TicketWithProfile) => {
-      const config: Record<string, { class: string }> = { low: "bg-slate-100 text-slate-600", medium: "bg-blue-100 text-blue-700", high: "bg-orange-100 text-orange-700", urgent: "bg-red-100 text-red-700" };
-      return <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${config[t.priority]}`}>{t.priority}</span>;
+      const config: Record<string, string> = { low: "bg-slate-100 text-slate-600", medium: "bg-blue-100 text-blue-700", high: "bg-orange-100 text-orange-700", urgent: "bg-red-100 text-red-700" };
+      return <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${config[t.priority] || ""}`}>{t.priority}</span>;
     }},
     { key: "status", header: "Status", render: (t: TicketWithProfile) => {
       const config: Record<string, { class: string; icon: any }> = { open: { class: "bg-blue-100 text-blue-700", icon: Ticket }, in_progress: { class: "bg-purple-100 text-purple-700", icon: Clock }, escalated: { class: "bg-red-100 text-red-700", icon: AlertTriangle }, resolved: { class: "bg-green-100 text-green-700", icon: CheckCircle }, closed: { class: "bg-slate-100 text-slate-600", icon: CheckCircle } };
-      const { class: className, icon: Icon } = config[t.status];
-      return <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${className}`}><Icon className="h-3 w-3" />{t.status.replace("_", " ")}</span>;
+      const c = config[t.status] || { class: "", icon: Ticket };
+      return <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${c.class}`}><c.icon className="h-3 w-3" />{t.status.replace("_", " ")}</span>;
     }},
     { key: "date", header: "Created", render: (t: TicketWithProfile) => <span className="text-sm text-slate-500">{formatDateTime(t.created_at)}</span> },
     { key: "actions", header: "", render: (t: TicketWithProfile) => (

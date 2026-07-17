@@ -108,7 +108,7 @@ export default function UsersPage() {
           created_at: "2023-11-05T08:00:00Z",
           updated_at: "2024-06-15T10:30:00Z",
           wallet: { id: "w4", profile_id: "4", balance: 0, currency: "NGN", is_active: true, last_updated: "2024-06-15T10:30:00Z", created_at: "", updated_at: "" },
-          savings: null,
+          savings: undefined,
         },
         {
           id: "5",

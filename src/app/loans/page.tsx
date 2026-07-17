@@ -99,13 +99,13 @@ export default function LoansPage() {
 
   const handleDisburse = () => {
     if (!actionModal) return;
-    setLoans((prev) => prev.map((l) => l.id === actionModal.loan.id ? { ...l, status: "disbursed" as const, disbursement_date: new Date().toISOString(), amount_disbursed: actionModal.loan.principal_amount, outstanding_balance: actionModal.loan.total_repayment } : l));
+    setLoans((prev) => prev.map((l) => l.id === actionModal.loan.id ? { ...l, status: "disbursed" as any, disbursement_date: new Date().toISOString(), amount_disbursed: actionModal.loan.principal_amount, outstanding_balance: actionModal.loan.total_repayment } : l));
     setActionModal(null);
   };
 
   const handleReject = () => {
     if (!actionModal) return;
-    setLoans((prev) => prev.map((l) => l.id === actionModal.loan.id ? { ...l, status: "rejected" as const, rejection_reason: rejectionReason } : l));
+    setLoans((prev) => prev.map((l) => l.id === actionModal.loan.id ? { ...l, status: "rejected" as any, rejection_reason: rejectionReason } : l));
     setActionModal(null);
     setRejectionReason("");
   };

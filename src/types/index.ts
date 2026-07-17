@@ -292,6 +292,8 @@ export interface PaginatedResponse<T> {
 export interface FilterOptions {
   search?: string;
   status?: string;
+  type?: string;
+  priority?: string;
   dateFrom?: string;
   dateTo?: string;
   role?: string;
@@ -299,6 +301,8 @@ export interface FilterOptions {
   pageSize?: number;
   sortBy?: string;
   sortOrder?: "asc" | "desc";
+  action?: string;
+  entityType?: string;
 }
 
 // Deposit Types

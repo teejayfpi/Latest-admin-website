@@ -130,8 +130,8 @@ export default function DepositsPage() {
   const columns = [
     { key: "user", header: "Member", render: (deposit: DepositRequest) => (
       <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 text-sm font-bold text-white">{getInitials(deposit.profile?.name)}</div>
-        <div><p className="font-medium text-slate-900">{deposit.profile?.name || "N/A"}</p><p className="text-xs text-slate-500">{deposit.profile?.user_id}</p></div>
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 text-sm font-bold text-white">{getInitials(deposit.profile?.name || "")}</div>
+        <div><p className="font-medium text-slate-900">{deposit.profile?.name || "N/A"}</p><p className="text-xs text-slate-500">{deposit.profile?.user_id || ""}</p></div>
       </div>
     )},
     { key: "amount", header: "Amount", render: (deposit: DepositRequest) => <span className="font-semibold text-slate-900">{formatCurrency(deposit.amount)}</span> },
@@ -187,7 +187,7 @@ export default function DepositsPage() {
         {selectedDeposit && (
           <div className="space-y-6">
             <div className="flex items-center justify-between rounded-lg bg-slate-50 p-4">
-              <div className="flex items-center gap-4"><div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 text-xl font-bold text-white">{getInitials(selectedDeposit.profile?.name)}</div><div><h3 className="text-lg font-bold text-slate-900">{selectedDeposit.profile?.name}</h3><p className="text-slate-500">{selectedDeposit.profile?.email}</p><p className="text-sm text-slate-400">ID: {selectedDeposit.profile?.user_id}</p></div></div>
+              <div className="flex items-center gap-4"><div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 text-xl font-bold text-white">{getInitials(selectedDeposit.profile?.name || "")}</div><div><h3 className="text-lg font-bold text-slate-900">{selectedDeposit.profile?.name || "Unknown"}</h3><p className="text-slate-500">{selectedDeposit.profile?.email || ""}</p><p className="text-sm text-slate-400">ID: {selectedDeposit.profile?.user_id || ""}</p></div></div>
               <div className="text-right"><p className="text-3xl font-bold text-slate-900">{formatCurrency(selectedDeposit.amount)}</p><span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm font-medium ${getStatusConfig(selectedDeposit.status).bg} ${getStatusConfig(selectedDeposit.status).color}`}>{getStatusConfig(selectedDeposit.status).label}</span></div>
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -203,12 +203,12 @@ export default function DepositsPage() {
 
       <Modal isOpen={actionModal?.type === "approve"} onClose={() => { setActionModal(null); setAdminNotes(""); }} title="Approve Deposit" size="md"
         footer={<><Button variant="outline" onClick={() => { setActionModal(null); setAdminNotes(""); }}>Cancel</Button><Button icon={CheckCircle} loading={processing} onClick={handleApprove}>Approve & Credit</Button></>}>
-        <div className="space-y-4"><div className="rounded-lg bg-green-50 p-4 border border-green-200"><p className="font-medium text-green-800">Confirm Deposit Approval</p><p className="mt-1 text-sm text-green-700">Approving <strong>{formatCurrency(actionModal?.deposit?.amount)}</strong> from <strong>{actionModal?.deposit?.profile?.name}</strong></p></div><div><label className="block text-sm font-medium text-slate-700">Admin Notes</label><textarea value={adminNotes} onChange={(e) => setAdminNotes(e.target.value)} placeholder="Add notes..." className="mt-1 h-24 w-full rounded-lg border border-slate-200 p-3 text-sm" /></div></div>
+        <div className="space-y-4"><div className="rounded-lg bg-green-50 p-4 border border-green-200"><p className="font-medium text-green-800">Confirm Deposit Approval</p><p className="mt-1 text-sm text-green-700">Approving <strong>{formatCurrency(actionModal?.deposit?.amount || 0)}</strong> from <strong>{actionModal?.deposit?.profile?.name || "Unknown"}</strong></p></div><div><label className="block text-sm font-medium text-slate-700">Admin Notes</label><textarea value={adminNotes} onChange={(e) => setAdminNotes(e.target.value)} placeholder="Add notes..." className="mt-1 h-24 w-full rounded-lg border border-slate-200 p-3 text-sm" /></div></div>
       </Modal>
 
       <Modal isOpen={actionModal?.type === "reject"} onClose={() => { setActionModal(null); setAdminNotes(""); }} title="Reject Deposit" size="md"
         footer={<><Button variant="outline" onClick={() => { setActionModal(null); setAdminNotes(""); }}>Cancel</Button><Button variant="danger" icon={XCircle} loading={processing} onClick={handleReject}>Reject</Button></>}>
-        <div className="space-y-4"><div className="rounded-lg bg-red-50 p-4 border border-red-200"><p className="font-medium text-red-800">Confirm Rejection</p><p className="mt-1 text-sm text-red-700">Rejecting <strong>{formatCurrency(actionModal?.deposit?.amount)}</strong> from <strong>{actionModal?.deposit?.profile?.name}</strong></p></div><div><label className="block text-sm font-medium text-slate-700">Rejection Reason <span className="text-red-500">*</span></label><textarea value={adminNotes} onChange={(e) => setAdminNotes(e.target.value)} placeholder="Explain why..." className="mt-1 h-24 w-full rounded-lg border border-slate-200 p-3 text-sm" required /></div></div>
+        <div className="space-y-4"><div className="rounded-lg bg-red-50 p-4 border border-red-200"><p className="font-medium text-red-800">Confirm Rejection</p><p className="mt-1 text-sm text-red-700">Rejecting <strong>{formatCurrency(actionModal?.deposit?.amount || 0)}</strong> from <strong>{actionModal?.deposit?.profile?.name || "Unknown"}</strong></p></div><div><label className="block text-sm font-medium text-slate-700">Rejection Reason <span className="text-red-500">*</span></label><textarea value={adminNotes} onChange={(e) => setAdminNotes(e.target.value)} placeholder="Explain why..." className="mt-1 h-24 w-full rounded-lg border border-slate-200 p-3 text-sm" required /></div></div>
       </Modal>
 
       <Modal isOpen={actionModal?.type === "review"} onClose={() => { setActionModal(null); setAdminNotes(""); }} title="Mark for Review" size="md"

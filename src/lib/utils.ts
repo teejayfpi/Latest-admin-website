@@ -7,9 +7,10 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatCurrency(
-  amount: number,
+  amount: number | undefined | null,
   currency: string = "NGN"
 ): string {
+  if (amount == null) return `${currency} 0.00`;
   return new Intl.NumberFormat("en-NG", {
     style: "currency",
     currency,
@@ -37,7 +38,7 @@ export function timeAgo(date: string | Date): string {
   return formatDistanceToNow(d, { addSuffix: true });
 }
 
-export function getInitials(name: string | null): string {
+export function getInitials(name: string | null | undefined): string {
   if (!name) return "?";
   const parts = name.split(" ");
   if (parts.length >= 2) {
