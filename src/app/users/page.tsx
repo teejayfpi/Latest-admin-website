@@ -373,8 +373,10 @@ export default function UsersPage() {
 
             {/* KYC Details */}
             {selectedUser.kyc && (
-              <div className="rounded-lg border border-slate-200 p-4">
-                <h4 className="font-medium text-slate-900 mb-3">KYC Details</h4>
+              <div className="rounded-lg border border-slate-200 p-4 space-y-4">
+                <h4 className="font-medium text-slate-900">KYC & Registration Details</h4>
+                
+                {/* Basic Info */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-slate-500">National ID</p>
@@ -382,7 +384,99 @@ export default function UsersPage() {
                   </div>
                   <div>
                     <p className="text-sm text-slate-500">KYC Status</p>
-                    <p className="font-medium text-slate-900">{selectedUser.kyc.status}</p>
+                    <p className="font-medium text-slate-900 capitalize">{selectedUser.kyc.status}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-slate-500">Date of Birth</p>
+                    <p className="font-medium text-slate-900">{selectedUser.kyc.date_of_birth || "N/A"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-slate-500">Address</p>
+                    <p className="font-medium text-slate-900">{selectedUser.kyc.address || "N/A"}</p>
+                  </div>
+                </div>
+
+                {/* Personal Info */}
+                {selectedUser.kyc.personal_info && Object.keys(selectedUser.kyc.personal_info).length > 0 && (
+                  <div>
+                    <p className="text-sm font-medium text-slate-700 mb-2">Personal Information</p>
+                    <div className="grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded-lg">
+                      {Object.entries(selectedUser.kyc.personal_info).map(([key, value]) => (
+                        <div key={key}>
+                          <p className="text-xs text-slate-500 capitalize">{key.replace(/_/g, " ")}</p>
+                          <p className="font-medium text-slate-900">{String(value)}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Contact Info */}
+                {selectedUser.kyc.contact_info && Object.keys(selectedUser.kyc.contact_info).length > 0 && (
+                  <div>
+                    <p className="text-sm font-medium text-slate-700 mb-2">Contact Information</p>
+                    <div className="grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded-lg">
+                      {Object.entries(selectedUser.kyc.contact_info).map(([key, value]) => (
+                        <div key={key}>
+                          <p className="text-xs text-slate-500 capitalize">{key.replace(/_/g, " ")}</p>
+                          <p className="font-medium text-slate-900">{String(value)}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Employment Info */}
+                {selectedUser.kyc.employment_info && Object.keys(selectedUser.kyc.employment_info).length > 0 && (
+                  <div>
+                    <p className="text-sm font-medium text-slate-700 mb-2">Employment Information</p>
+                    <div className="grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded-lg">
+                      {Object.entries(selectedUser.kyc.employment_info).map(([key, value]) => (
+                        <div key={key}>
+                          <p className="text-xs text-slate-500 capitalize">{key.replace(/_/g, " ")}</p>
+                          <p className="font-medium text-slate-900">{String(value)}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Bank Info */}
+                {selectedUser.kyc.bank_info && Object.keys(selectedUser.kyc.bank_info).length > 0 && (
+                  <div>
+                    <p className="text-sm font-medium text-slate-700 mb-2">Bank Information</p>
+                    <div className="grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded-lg">
+                      {Object.entries(selectedUser.kyc.bank_info).map(([key, value]) => (
+                        <div key={key}>
+                          <p className="text-xs text-slate-500 capitalize">{key.replace(/_/g, " ")}</p>
+                          <p className="font-medium text-slate-900">{String(value)}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Selfie */}
+                {selectedUser.kyc.selfie && (selectedUser.kyc.selfie as any).url && (
+                  <div>
+                    <p className="text-sm font-medium text-slate-700 mb-2">Selfie Verification</p>
+                    <img 
+                      src={(selectedUser.kyc.selfie as any).url} 
+                      alt="Selfie" 
+                      className="h-32 w-32 rounded-lg object-cover border border-slate-200"
+                    />
+                  </div>
+                )}
+
+                {/* Submission Info */}
+                <div className="grid grid-cols-2 gap-4 pt-2 border-t border-slate-200">
+                  <div>
+                    <p className="text-sm text-slate-500">Submitted At</p>
+                    <p className="font-medium text-slate-900">{selectedUser.kyc.submitted_at ? formatDate(selectedUser.kyc.submitted_at) : "Not submitted"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-slate-500">Verification Level</p>
+                    <p className="font-medium text-slate-900">Level {selectedUser.kyc.verification_level}</p>
                   </div>
                 </div>
               </div>
