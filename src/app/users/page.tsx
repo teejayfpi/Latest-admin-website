@@ -9,12 +9,14 @@ import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { formatCurrency, formatDate, getStatusColor, getRoleColor, getInitials } from "@/lib/utils";
 import { Search, Filter, MoreVertical, Ban, CheckCircle, Flag, Eye, Mail, Phone } from "lucide-react";
-import { getUsers } from "@/lib/db-service";
-import type { Profile, Wallet, Savings } from "@/types";
+import { getUsers, getUserById, updateUser, flagUser, unflagUser } from "@/lib/db-service";
+import type { Profile, Wallet, Savings, KYC } from "@/types";
+import toast from "react-hot-toast";
 
 interface UserWithDetails extends Profile {
   wallet?: Wallet;
   savings?: Savings;
+  kyc?: KYC;
 }
 
 export default function UsersPage() {
@@ -28,6 +30,10 @@ export default function UsersPage() {
   const [totalCount, setTotalCount] = useState(0);
   const [selectedUser, setSelectedUser] = useState<UserWithDetails | null>(null);
   const [showUserModal, setShowUserModal] = useState(false);
+  const [userModalLoading, setUserModalLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [showFlagModal, setShowFlagModal] = useState(false);
+  const [flagReason, setFlagReason] = useState("");
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -137,10 +143,7 @@ export default function UsersPage() {
       render: (user: UserWithDetails) => (
         <div className="flex items-center gap-2">
           <button
-            onClick={() => {
-              setSelectedUser(user);
-              setShowUserModal(true);
-            }}
+            onClick={() => handleOpenUserModal(user)}
             className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
           >
             <Eye className="h-4 w-4" />
@@ -149,6 +152,76 @@ export default function UsersPage() {
       ),
     },
   ];
+
+  // Fetch full user details when opening modal
+  const handleOpenUserModal = async (user: UserWithDetails) => {
+    setUserModalLoading(true);
+    setSelectedUser(user);
+    setShowUserModal(true);
+    try {
+      const fullUser = await getUserById(user.id);
+      if (fullUser) {
+        setSelectedUser(fullUser as UserWithDetails);
+      }
+    } catch (error) {
+      console.error("Error fetching user details:", error);
+    } finally {
+      setUserModalLoading(false);
+    }
+  };
+
+  // Handle activate/suspend user
+  const handleToggleUserStatus = async () => {
+    if (!selectedUser) return;
+    setActionLoading(true);
+    try {
+      await updateUser(selectedUser.id, { is_active: !selectedUser.is_active });
+      setSelectedUser((prev) => prev ? { ...prev, is_active: !prev.is_active } : null);
+      setUsers((prev) => prev.map((u) => u.id === selectedUser.id ? { ...u, is_active: !u.is_active } : u));
+      toast.success(`User ${selectedUser.is_active ? "suspended" : "activated"} successfully`);
+    } catch (error) {
+      console.error("Error updating user:", error);
+      toast.error("Failed to update user");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Handle flag user
+  const handleFlagUser = async () => {
+    if (!selectedUser || !flagReason) return;
+    setActionLoading(true);
+    try {
+      await flagUser(selectedUser.id, flagReason);
+      setSelectedUser((prev) => prev ? { ...prev, is_flagged: true, flagged_reason: flagReason } : null);
+      setUsers((prev) => prev.map((u) => u.id === selectedUser.id ? { ...u, is_flagged: true, flagged_reason: flagReason } : u));
+      setShowFlagModal(false);
+      setFlagReason("");
+      toast.success("User flagged successfully");
+    } catch (error) {
+      console.error("Error flagging user:", error);
+      toast.error("Failed to flag user");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Handle unflag user
+  const handleUnflagUser = async () => {
+    if (!selectedUser) return;
+    setActionLoading(true);
+    try {
+      await unflagUser(selectedUser.id);
+      setSelectedUser((prev) => prev ? { ...prev, is_flagged: false, flagged_reason: null } : null);
+      setUsers((prev) => prev.map((u) => u.id === selectedUser.id ? { ...u, is_flagged: false, flagged_reason: null } : u));
+      toast.success("User unflagged successfully");
+    } catch (error) {
+      console.error("Error unflagging user:", error);
+      toast.error("Failed to unflag user");
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   return (
     <MainLayout title="Users" subtitle="Manage all registered users and their accounts">
@@ -226,12 +299,27 @@ export default function UsersPage() {
         footer={
           <>
             <Button variant="outline" onClick={() => setShowUserModal(false)}>Close</Button>
-            <Button variant="danger" icon={Ban}>Suspend User</Button>
-            <Button icon={CheckCircle}>Activate</Button>
+            {selectedUser?.is_flagged ? (
+              <Button onClick={handleUnflagUser} loading={actionLoading}>Unflag User</Button>
+            ) : (
+              <Button variant="danger" icon={Flag} onClick={() => setShowFlagModal(true)}>Flag User</Button>
+            )}
+            <Button 
+              variant={selectedUser?.is_active ? "danger" : "primary"} 
+              icon={selectedUser?.is_active ? Ban : CheckCircle} 
+              onClick={handleToggleUserStatus}
+              loading={actionLoading}
+            >
+              {selectedUser?.is_active ? "Suspend User" : "Activate User"}
+            </Button>
           </>
         }
       >
-        {selectedUser && (
+        {userModalLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-cyan-200 border-t-cyan-600"></div>
+          </div>
+        ) : selectedUser ? (
           <div className="space-y-6">
             <div className="flex items-center gap-4">
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 text-2xl font-bold text-white">
@@ -248,6 +336,9 @@ export default function UsersPage() {
                     <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700">Active</span>
                   ) : (
                     <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-700">Inactive</span>
+                  )}
+                  {selectedUser.is_flagged && (
+                    <span className="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-700">Flagged</span>
                   )}
                 </div>
               </div>
@@ -280,14 +371,60 @@ export default function UsersPage() {
               </div>
             </div>
 
-            {selectedUser.is_flagged && (
+            {/* KYC Details */}
+            {selectedUser.kyc && (
+              <div className="rounded-lg border border-slate-200 p-4">
+                <h4 className="font-medium text-slate-900 mb-3">KYC Details</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-slate-500">National ID</p>
+                    <p className="font-medium text-slate-900">{selectedUser.kyc.national_id || "N/A"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-slate-500">KYC Status</p>
+                    <p className="font-medium text-slate-900">{selectedUser.kyc.status}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {selectedUser.is_flagged && selectedUser.flagged_reason && (
               <div className="rounded-lg bg-red-50 p-4 border border-red-200">
                 <p className="font-medium text-red-700">Flagged Reason</p>
                 <p className="mt-1 text-sm text-red-600">{selectedUser.flagged_reason}</p>
               </div>
             )}
           </div>
+        ) : (
+          <p className="text-center text-slate-500 py-8">No user selected</p>
         )}
+      </Modal>
+
+      {/* Flag User Modal */}
+      <Modal
+        isOpen={showFlagModal}
+        onClose={() => setShowFlagModal(false)}
+        title="Flag User"
+        size="md"
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setShowFlagModal(false)}>Cancel</Button>
+            <Button variant="danger" onClick={handleFlagUser} loading={actionLoading} disabled={!flagReason}>
+              Flag User
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <p className="text-slate-600">Please provide a reason for flagging this user.</p>
+          <textarea
+            value={flagReason}
+            onChange={(e) => setFlagReason(e.target.value)}
+            placeholder="Enter flag reason..."
+            className="w-full rounded-lg border border-slate-200 p-3 text-sm focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20"
+            rows={4}
+          />
+        </div>
       </Modal>
     </MainLayout>
   );

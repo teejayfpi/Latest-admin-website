@@ -24,8 +24,10 @@ export default function LoansPage() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const [selectedLoan, setSelectedLoan] = useState<LoanWithProfile | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [detailModalLoading, setDetailModalLoading] = useState(false);
   const [actionModal, setActionModal] = useState<{ type: "approve" | "reject" | "disburse"; loan: LoanWithProfile } | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
 
@@ -33,7 +35,7 @@ export default function LoansPage() {
     const fetchLoans = async () => {
       setLoading(true);
       try {
-        const { getLoans, updateLoanStatus } = await import("@/lib/db-service");
+        const { getLoans } = await import("@/lib/db-service");
         const response = await getLoans({
           status: statusFilter || undefined,
           type: typeFilter || undefined,
@@ -44,6 +46,7 @@ export default function LoansPage() {
         
         setLoans(response.data as LoanWithProfile[]);
         setTotalPages(response.totalPages);
+        setTotalCount(response.count);
       } catch (error) {
         console.error("Error fetching loans:", error);
         setLoans([]);
@@ -54,6 +57,24 @@ export default function LoansPage() {
 
     fetchLoans();
   }, [statusFilter, typeFilter, search, page]);
+
+  // Fetch full loan details when opening modal
+  const handleOpenLoanDetail = async (loan: LoanWithProfile) => {
+    setDetailModalLoading(true);
+    setSelectedLoan(loan);
+    setShowDetailModal(true);
+    try {
+      const { getLoanById } = await import("@/lib/db-service");
+      const fullLoan = await getLoanById(loan.id);
+      if (fullLoan) {
+        setSelectedLoan(fullLoan as LoanWithProfile);
+      }
+    } catch (error) {
+      console.error("Error fetching loan details:", error);
+    } finally {
+      setDetailModalLoading(false);
+    }
+  };
 
   const handleApprove = async () => {
     if (!actionModal) return;
@@ -164,7 +185,7 @@ export default function LoansPage() {
       header: "",
       render: (loan: LoanWithProfile) => (
         <div className="flex items-center gap-2">
-          <button onClick={() => { setSelectedLoan(loan); setShowDetailModal(true); }} className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
+          <button onClick={() => handleOpenLoanDetail(loan)} className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
             <Eye className="h-4 w-4" />
           </button>
           {loan.status === "pending" && (
@@ -233,13 +254,18 @@ export default function LoansPage() {
 
         {/* Table */}
         <DataTable columns={columns} data={loans} loading={loading} emptyMessage="No loans found" />
-        <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} totalCount={80} pageSize={20} />
+        <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} totalCount={totalCount} pageSize={20} />
       </div>
 
       {/* Detail Modal */}
       <Modal isOpen={showDetailModal} onClose={() => setShowDetailModal(false)} title="Loan Details" size="lg"
         footer={<><Button variant="outline" onClick={() => setShowDetailModal(false)}>Close</Button></>}>
-        {selectedLoan && selectedLoan.profile && (
+        {detailModalLoading && (
+          <div className="flex items-center justify-center py-12">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-cyan-200 border-t-cyan-600"></div>
+          </div>
+        )}
+        {!detailModalLoading && selectedLoan && selectedLoan.profile && (
           <div className="space-y-6">
             <div className="flex items-center justify-between rounded-lg bg-slate-50 p-4">
               <div className="flex items-center gap-3">

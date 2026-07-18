@@ -34,13 +34,18 @@ export default function DashboardPage() {
         const growthData = await getUserGrowthData(6);
         setUserGrowthData(growthData);
 
-        const { data: transactions } = await getTransactions({ pageSize: 5 });
+        const [transactionsResponse, ticketsResponse] = await Promise.all([
+          getTransactions({ pageSize: 5 }),
+          getTickets({ status: "open", pageSize: 5 }),
+        ]);
 
         const activities: any[] = [];
-        transactions?.slice(0, 5).forEach((tx: any) => {
+        
+        // Add transactions to activities
+        transactionsResponse.data?.slice(0, 3).forEach((tx: any) => {
           activities.push({
             id: tx.id,
-            type: "deposit",
+            type: "transaction",
             description: `${tx.type} from ${tx.profile?.name || "User"}`,
             amount: tx.amount,
             status: tx.status,
@@ -48,7 +53,21 @@ export default function DashboardPage() {
           });
         });
 
-        setRecentActivities(activities);
+        // Add tickets to activities
+        ticketsResponse.data?.slice(0, 2).forEach((ticket: any) => {
+          activities.push({
+            id: ticket.id,
+            type: "ticket",
+            description: `New ticket: ${ticket.subject}`,
+            status: ticket.status,
+            priority: ticket.priority,
+            time: ticket.created_at,
+          });
+        });
+
+        // Sort by time and take top 5
+        activities.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
+        setRecentActivities(activities.slice(0, 5));
       } catch (err: any) {
         console.error("Error fetching dashboard data:", err);
         setError(err.message || "Failed to load dashboard data");

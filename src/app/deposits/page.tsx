@@ -7,7 +7,7 @@ import { Pagination } from "@/components/ui/Pagination";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { formatCurrency, formatDate, formatDateTime, getInitials, timeAgo } from "@/lib/utils";
-import { Search, CheckCircle, XCircle, Eye, Clock, Image, DollarSign, FileText } from "lucide-react";
+import { Search, CheckCircle, XCircle, Eye, Clock, Image, DollarSign, FileText, AlertCircle } from "lucide-react";
 import toast from "react-hot-toast";
 
 interface DepositRequest {
@@ -38,7 +38,9 @@ interface DepositRequest {
 
 export default function DepositsPage() {
   const [deposits, setDeposits] = useState<DepositRequest[]>([]);
+  const [depositStats, setDepositStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [statsLoading, setStatsLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
@@ -46,9 +48,27 @@ export default function DepositsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [selectedDeposit, setSelectedDeposit] = useState<DepositRequest | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [detailLoading, setDetailLoading] = useState(false);
   const [actionModal, setActionModal] = useState<{ type: "approve" | "reject" | "review"; deposit: DepositRequest } | null>(null);
   const [adminNotes, setAdminNotes] = useState("");
   const [processing, setProcessing] = useState(false);
+
+  useEffect(() => {
+    const fetchDepositStats = async () => {
+      setStatsLoading(true);
+      try {
+        const { getDepositStats } = await import("@/lib/db-service");
+        const stats = await getDepositStats();
+        setDepositStats(stats);
+      } catch (error) {
+        console.error("Error fetching deposit stats:", error);
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+
+    fetchDepositStats();
+  }, []);
 
   useEffect(() => {
     const fetchDeposits = async () => {
@@ -190,12 +210,12 @@ export default function DepositsPage() {
     <MainLayout title="Deposits Management" subtitle="Review and manage deposit requests from members">
       <div className="space-y-6">
         <div className="grid grid-cols-2 gap-4 md:grid-cols-6">
-          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"><div className="flex items-center gap-3"><div className="rounded-full bg-slate-100 p-2"><DollarSign className="h-5 w-5 text-slate-600" /></div><div><p className="text-2xl font-bold text-slate-900">{deposits.length}</p><p className="text-xs text-slate-500">Total Deposits</p></div></div></div>
-          <div className="rounded-xl border border-yellow-200 bg-gradient-to-br from-yellow-50 to-orange-50 p-4"><div className="flex items-center gap-3"><div className="rounded-full bg-yellow-100 p-2"><Clock className="h-5 w-5 text-yellow-600" /></div><div><p className="text-2xl font-bold text-slate-900">{totalPending}</p><p className="text-xs text-yellow-700">Pending</p></div></div></div>
-          <div className="rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 p-4"><div className="flex items-center gap-3"><div className="rounded-full bg-blue-100 p-2"><FileText className="h-5 w-5 text-blue-600" /></div><div><p className="text-2xl font-bold text-slate-900">{totalUnderReview}</p><p className="text-xs text-blue-700">Under Review</p></div></div></div>
-          <div className="rounded-xl border border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 p-4"><div className="flex items-center gap-3"><div className="rounded-full bg-green-100 p-2"><CheckCircle className="h-5 w-5 text-green-600" /></div><div><p className="text-2xl font-bold text-slate-900">{totalVerified}</p><p className="text-xs text-green-700">Verified</p></div></div></div>
-          <div className="rounded-xl border border-red-200 bg-gradient-to-br from-red-50 to-rose-50 p-4"><div className="flex items-center gap-3"><div className="rounded-full bg-red-100 p-2"><XCircle className="h-5 w-5 text-red-600" /></div><div><p className="text-2xl font-bold text-slate-900">{totalRejected}</p><p className="text-xs text-red-700">Rejected</p></div></div></div>
-          <div className="rounded-xl border border-cyan-200 bg-gradient-to-br from-cyan-50 to-blue-50 p-4"><div className="flex items-center gap-3"><div className="rounded-full bg-cyan-100 p-2"><DollarSign className="h-5 w-5 text-cyan-600" /></div><div><p className="text-xl font-bold text-slate-900">{formatCurrency(pendingAmount)}</p><p className="text-xs text-cyan-700">Pending Amount</p></div></div></div>
+          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"><div className="flex items-center gap-3"><div className="rounded-full bg-slate-100 p-2"><DollarSign className="h-5 w-5 text-slate-600" /></div><div><p className="text-2xl font-bold text-slate-900">{depositStats?.total || deposits.length}</p><p className="text-xs text-slate-500">Total Deposits</p></div></div></div>
+          <div className="rounded-xl border border-yellow-200 bg-gradient-to-br from-yellow-50 to-orange-50 p-4"><div className="flex items-center gap-3"><div className="rounded-full bg-yellow-100 p-2"><Clock className="h-5 w-5 text-yellow-600" /></div><div><p className="text-2xl font-bold text-slate-900">{depositStats?.pending || totalPending}</p><p className="text-xs text-yellow-700">Pending</p></div></div></div>
+          <div className="rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 p-4"><div className="flex items-center gap-3"><div className="rounded-full bg-blue-100 p-2"><FileText className="h-5 w-5 text-blue-600" /></div><div><p className="text-2xl font-bold text-slate-900">{depositStats?.under_review || totalUnderReview}</p><p className="text-xs text-blue-700">Under Review</p></div></div></div>
+          <div className="rounded-xl border border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 p-4"><div className="flex items-center gap-3"><div className="rounded-full bg-green-100 p-2"><CheckCircle className="h-5 w-5 text-green-600" /></div><div><p className="text-2xl font-bold text-slate-900">{depositStats?.verified || totalVerified}</p><p className="text-xs text-green-700">Verified</p></div></div></div>
+          <div className="rounded-xl border border-red-200 bg-gradient-to-br from-red-50 to-rose-50 p-4"><div className="flex items-center gap-3"><div className="rounded-full bg-red-100 p-2"><XCircle className="h-5 w-5 text-red-600" /></div><div><p className="text-2xl font-bold text-slate-900">{depositStats?.rejected || totalRejected}</p><p className="text-xs text-red-700">Rejected</p></div></div></div>
+          <div className="rounded-xl border border-cyan-200 bg-gradient-to-br from-cyan-50 to-blue-50 p-4"><div className="flex items-center gap-3"><div className="rounded-full bg-cyan-100 p-2"><DollarSign className="h-5 w-5 text-cyan-600" /></div><div><p className="text-xl font-bold text-slate-900">{formatCurrency(depositStats?.pending_amount || pendingAmount)}</p><p className="text-xs text-cyan-700">Pending Amount</p></div></div></div>
         </div>
 
         <div className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:flex-row md:items-center">
