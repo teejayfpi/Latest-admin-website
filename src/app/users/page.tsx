@@ -8,10 +8,12 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { formatCurrency, formatDate, getStatusColor, getRoleColor, getInitials } from "@/lib/utils";
-import { Search, Filter, MoreVertical, Ban, CheckCircle, Flag, Eye, Mail, Phone } from "lucide-react";
+import { Search, Filter, MoreVertical, Ban, CheckCircle, Flag, Eye, Mail, Phone, ChevronRight } from "lucide-react";
 import { getUsers, getUserById, updateUser, flagUser, unflagUser } from "@/lib/db-service";
 import type { Profile, Wallet, Savings, KYC } from "@/types";
 import toast from "react-hot-toast";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 interface UserWithDetails extends Profile {
   wallet?: Wallet;
@@ -67,7 +69,7 @@ export default function UsersPage() {
       key: "user",
       header: "User",
       render: (user: UserWithDetails) => (
-        <div className="flex items-center gap-3">
+        <Link href={`/users/${user.id}`} className="flex items-center gap-3 hover:bg-slate-50 -mx-2 px-2 py-1 rounded-lg transition-colors">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 text-sm font-bold text-white">
             {getInitials(user.name)}
           </div>
@@ -75,7 +77,7 @@ export default function UsersPage() {
             <p className="font-medium text-slate-900">{user.name || "N/A"}</p>
             <p className="text-xs text-slate-500">{user.user_id}</p>
           </div>
-        </div>
+        </Link>
       ),
     },
     {

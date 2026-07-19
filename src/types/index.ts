@@ -347,3 +347,36 @@ export interface DepositStats {
   pending_amount: number;
   verified_amount: number;
 }
+
+// Mobile Registration Types
+export interface MobileRegistration {
+  id: string;
+  profile_id: string;
+  device_id: string | null;
+  device_model: string | null;
+  device_os: string | null;
+  app_version: string | null;
+  registration_method: "email" | "phone" | "social";
+  referral_code_used: string | null;
+  fcm_token: string | null;
+  push_notifications_enabled: boolean;
+  location_enabled: boolean;
+  biometric_enabled: boolean;
+  last_active_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// User Comprehensive Profile
+export interface UserProfile extends Profile {
+  wallet?: Wallet;
+  savings?: Savings;
+  kyc?: KYC;
+  kyc_documents?: KYCDocument[];
+  transactions?: Transaction[];
+  loans?: Loan[];
+  referral?: Referral;
+  mobile_registration?: MobileRegistration;
+  tickets?: Ticket[];
+  deposits?: DepositRequest[];
+}

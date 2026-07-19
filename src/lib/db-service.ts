@@ -107,14 +107,21 @@ export async function getUsers(options: FilterOptions = {}): Promise<PaginatedRe
   };
 }
 
-export async function getUserById(id: string): Promise<(Profile & { wallet?: Wallet; savings?: Savings; kyc?: KYC }) | null> {
+export async function getUserById(id: string): Promise<(Profile & { wallet?: Wallet; savings?: Savings; kyc?: KYC; kyc_documents?: any[]; transactions?: Transaction[]; loans?: Loan[]; referral?: any; mobile_registration?: any; tickets?: Ticket[]; deposits?: DepositRequest[] }) | null> {
   const { data: profile, error } = await supabaseAdmin.from("profiles").select("*").eq("id", id).single();
   if (error || !profile) return null;
 
-  const [walletResult, savingsResult, kycResult] = await Promise.all([
+  const [walletResult, savingsResult, kycResult, kycDocsResult, transactionsResult, loansResult, referralResult, mobileRegResult, ticketsResult, depositsResult] = await Promise.all([
     supabaseAdmin.from("wallets").select("*").eq("profile_id", id).single(),
     supabaseAdmin.from("savings").select("*").eq("profile_id", id).single(),
     supabaseAdmin.from("kyc").select("*").eq("profile_id", id).single(),
+    supabaseAdmin.from("kyc_documents").select("*").eq("profile_id", id),
+    supabaseAdmin.from("transactions").select("*").eq("profile_id", id).order("created_at", { ascending: false }).limit(20),
+    supabaseAdmin.from("loans").select("*").eq("profile_id", id).order("created_at", { ascending: false }),
+    supabaseAdmin.from("referrals").select("*").eq("profile_id", id).single(),
+    supabaseAdmin.from("mobile_registrations").select("*").eq("profile_id", id).single(),
+    supabaseAdmin.from("tickets").select("*").eq("profile_id", id).order("created_at", { ascending: false }).limit(5),
+    supabaseAdmin.from("payment_proofs").select("*").eq("profile_id", id).order("created_at", { ascending: false }),
   ]);
 
   return {
@@ -122,6 +129,13 @@ export async function getUserById(id: string): Promise<(Profile & { wallet?: Wal
     wallet: walletResult.data,
     savings: savingsResult.data,
     kyc: kycResult.data,
+    kyc_documents: kycDocsResult.data || [],
+    transactions: transactionsResult.data || [],
+    loans: loansResult.data || [],
+    referral: referralResult.data,
+    mobile_registration: mobileRegResult.data,
+    tickets: ticketsResult.data || [],
+    deposits: depositsResult.data || [],
   };
 }
 
