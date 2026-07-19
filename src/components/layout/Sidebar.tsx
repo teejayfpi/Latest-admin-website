@@ -20,6 +20,24 @@ import {
   Megaphone,
   Activity,
   DollarSign,
+  Smartphone,
+  Upload,
+  FileSpreadsheet,
+  PieChart,
+  Calculator,
+  HeartHandshake,
+  AlertTriangle,
+  Scale,
+  UserCog,
+  Clock,
+  KeyRound,
+  SmartphoneNfc,
+  Banknote,
+  Building2,
+  Gift,
+  UserCheck,
+  ClipboardList,
+  Percent,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -36,6 +54,30 @@ const navigation = [
   { name: "Announcements", href: "/announcements", icon: Megaphone },
   { name: "Reports", href: "/reports", icon: BarChart3 },
   { name: "Audit Logs", href: "/audit-logs", icon: Shield },
+  // Mobile & Content
+  { name: "Mobile Features", href: "/mobile-features", icon: Smartphone },
+  { name: "Notifications", href: "/notifications", icon: Bell },
+  // Financial
+  { name: "Manual Deposits", href: "/manual-deposits", icon: Banknote },
+  { name: "Excel Manager", href: "/excel-manager", icon: FileSpreadsheet },
+  { name: "Financial Dashboard", href: "/financial-dashboard", icon: PieChart },
+  { name: "Accounting", href: "/accounting-spreadsheet", icon: Calculator },
+  { name: "Member Contributions", href: "/member-contributions", icon: HeartHandshake },
+  { name: "Deposit Verification", href: "/deposit-verification", icon: FileCheck },
+  { name: "Interest Rates", href: "/interest-rates", icon: Percent },
+  { name: "Payroll", href: "/payroll", icon: DollarSign },
+  // Risk & Security
+  { name: "Fraud Detection", href: "/fraud-detection", icon: AlertTriangle },
+  { name: "Risk Scoring", href: "/risk-scoring", icon: Scale },
+  { name: "Bulk Operations", href: "/bulk-operations", icon: ClipboardList },
+  { name: "Rollover Management", href: "/rollover-management", icon: Clock },
+  { name: "Role Management", href: "/role-management", icon: KeyRound },
+  { name: "Login History", href: "/login-history", icon: Clock },
+  { name: "Sessions", href: "/sessions", icon: SmartphoneNfc },
+  // Organization
+  { name: "Organizations", href: "/organizations", icon: Building2 },
+  { name: "Referral Program", href: "/referral-program", icon: Gift },
+  { name: "Guarantor System", href: "/guarantor-system", icon: UserCheck },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 

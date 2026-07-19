@@ -1,37 +1,26 @@
-"use client";
-
-import { cn } from "@/lib/utils";
+import * as React from "react";
+import { clsx } from "clsx";
 
 interface BadgeProps {
-  children: React.ReactNode;
-  variant?: "default" | "success" | "warning" | "danger" | "info";
-  size?: "sm" | "md";
   className?: string;
+  variant?: "default" | "secondary" | "outline" | "destructive";
+  children: React.ReactNode;
 }
 
-export function Badge({ children, variant = "default", size = "md", className }: BadgeProps) {
+export function Badge({ className = "", variant = "default", children }: BadgeProps) {
   const variants = {
-    default: "bg-slate-100 text-slate-700",
-    success: "bg-green-100 text-green-700",
-    warning: "bg-yellow-100 text-yellow-700",
-    danger: "bg-red-100 text-red-700",
-    info: "bg-blue-100 text-blue-700",
-  };
-
-  const sizes = {
-    sm: "px-2 py-0.5 text-xs",
-    md: "px-2.5 py-1 text-xs",
+    default: "bg-cyan-600 text-white",
+    secondary: "bg-slate-100 text-slate-700",
+    outline: "border border-slate-200 bg-white text-slate-700",
+    destructive: "bg-red-600 text-white",
   };
 
   return (
-    <span
-      className={cn(
-        "inline-flex items-center rounded-full font-medium",
-        variants[variant],
-        sizes[size],
-        className
-      )}
-    >
+    <span className={clsx(
+      "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors",
+      variants[variant],
+      className
+    )}>
       {children}
     </span>
   );
