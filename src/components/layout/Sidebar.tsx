@@ -58,6 +58,7 @@ const navigation = [
   { name: "Audit Logs", href: "/audit-logs", icon: Shield },
   // Super Admin (only visible to super admins)
   { name: "Super Admin", href: "/super-admin", icon: Crown, superAdminOnly: true },
+  { name: "App Controls", href: "/super-admin/mobile-app-controls", icon: Smartphone, superAdminOnly: true },
   // Mobile & Content
   { name: "Mobile Features", href: "/mobile-features", icon: Smartphone },
   { name: "Notifications", href: "/notifications", icon: Bell },

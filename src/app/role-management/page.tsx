@@ -5,12 +5,11 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { Input } from "@/components/ui/Input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/Dialog";
-import { Label } from "@/components/ui/Label";
 import { supabaseAdmin } from "@/lib/supabase";
-import { Shield, Plus, Edit3, Trash2, Users, Key, Check, RefreshCw } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { Shield, Users, Key, Check, RefreshCw } from "lucide-react";
 import toast from "react-hot-toast";
+import Link from "next/link";
 
 interface Role {
   id: string;
@@ -49,8 +48,7 @@ const ROLE_COLORS: Record<string, string> = {
 export default function RoleManagementPage() {
   const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showRoleModal, setShowRoleModal] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+  const { isSuperAdmin } = useAuth();
 
   useEffect(() => {
     fetchRoles();
@@ -59,7 +57,6 @@ export default function RoleManagementPage() {
   const fetchRoles = async () => {
     setLoading(true);
     try {
-      // Get counts for each role
       const { data: profiles, error } = await supabaseAdmin
         .from("profiles")
         .select("role");
@@ -88,6 +85,22 @@ export default function RoleManagementPage() {
   };
 
   const getColorBadge = (c: string) => ({ red: "bg-red-100 text-red-700", purple: "bg-purple-100 text-purple-700", blue: "bg-blue-100 text-blue-700", green: "bg-green-100 text-green-700", gray: "bg-slate-100 text-slate-700" }[c] || "");
+
+  // Restrict to Super Admins only
+  if (!isSuperAdmin) {
+    return (
+      <MainLayout title="Role Management" subtitle="Access Denied">
+        <Card>
+          <CardContent className="p-8 text-center">
+            <Shield className="h-16 w-16 text-red-500 mx-auto mb-4" />
+            <h2 className="text-xl font-bold text-slate-900 mb-2">Access Denied</h2>
+            <p className="text-slate-500 mb-4">Only Super Admins can access Role Management.</p>
+            <p className="text-sm text-slate-400">Visit the Super Admin dashboard to manage roles and permissions.</p>
+          </CardContent>
+        </Card>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout title="Role Management" subtitle="Manage roles and permissions">
