@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Lock, Mail, AlertCircle } from "lucide-react";
-import toast from "react-hot-toast";
 import { Button } from "@/components/ui/Button";
+import { supabase } from "@/lib/supabase";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -20,14 +20,44 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      // Simulate authentication
-      if (email && password) {
-        // In production, this would validate against Supabase Auth
-        toast.success("Login successful!");
-        router.push("/dashboard");
-      } else {
-        setError("Please enter both email and password");
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (authError) {
+        setError(authError.message);
+        setLoading(false);
+        return;
       }
+
+      if (authData.user) {
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", authData.user.id)
+          .single();
+
+        if (profileError || !profile) {
+          setError("Profile not found");
+          await supabase.auth.signOut();
+          setLoading(false);
+          return;
+        }
+
+        if (profile.role !== "admin" && profile.role !== "superadmin") {
+          setError("Access denied. Admin credentials required.");
+          await supabase.auth.signOut();
+          setLoading(false);
+          return;
+        }
+
+        localStorage.setItem("admin_user", JSON.stringify(profile));
+        router.push("/dashboard");
+        return;
+      }
+
+      setError("Login failed");
     } catch {
       setError("Invalid credentials");
     } finally {

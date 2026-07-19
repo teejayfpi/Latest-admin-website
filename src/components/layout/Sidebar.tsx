@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   LayoutDashboard,
   Users,
@@ -38,6 +39,7 @@ import {
   UserCheck,
   ClipboardList,
   Percent,
+  Crown,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -54,6 +56,8 @@ const navigation = [
   { name: "Announcements", href: "/announcements", icon: Megaphone },
   { name: "Reports", href: "/reports", icon: BarChart3 },
   { name: "Audit Logs", href: "/audit-logs", icon: Shield },
+  // Super Admin (only visible to super admins)
+  { name: "Super Admin", href: "/super-admin", icon: Crown, superAdminOnly: true },
   // Mobile & Content
   { name: "Mobile Features", href: "/mobile-features", icon: Smartphone },
   { name: "Notifications", href: "/notifications", icon: Bell },
@@ -84,6 +88,13 @@ const navigation = [
 export function Sidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  const { user, isSuperAdmin, logout } = useAuth();
+
+  // Filter navigation based on role
+  const filteredNav = navigation.filter(item => {
+    if (item.superAdminOnly && !isSuperAdmin) return false;
+    return true;
+  });
 
   return (
     <aside
@@ -113,7 +124,7 @@ export function Sidebar() {
 
         {/* Navigation */}
         <nav className="flex-1 space-y-1 overflow-y-auto px-2 py-4">
-          {navigation.map((item) => {
+          {filteredNav.map((item) => {
             const isActive = pathname.startsWith(item.href);
             return (
               <Link
@@ -123,7 +134,8 @@ export function Sidebar() {
                   "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                   isActive
                     ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/25"
-                    : "text-slate-300 hover:bg-slate-700/50 hover:text-white"
+                    : "text-slate-300 hover:bg-slate-700/50 hover:text-white",
+                  item.superAdminOnly && "border border-red-500/30 bg-red-500/10"
                 )}
               >
                 <item.icon className={cn("h-5 w-5 flex-shrink-0", isActive && "text-white")} />
@@ -135,7 +147,14 @@ export function Sidebar() {
 
         {/* Bottom Section */}
         <div className="border-t border-slate-700 p-4">
+          {!collapsed && user && (
+            <div className="mb-2 px-3 py-2 text-xs text-slate-400">
+              <p className="font-medium text-slate-300">{user.name || user.email}</p>
+              <p className="capitalize">{user.role}</p>
+            </div>
+          )}
           <button
+            onClick={logout}
             className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-300 transition-colors hover:bg-slate-700 hover:text-white"
           >
             <LogOut className="h-5 w-5 flex-shrink-0" />

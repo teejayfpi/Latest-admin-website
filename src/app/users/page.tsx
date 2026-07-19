@@ -14,6 +14,10 @@ import type { Profile, Wallet, Savings, KYC } from "@/types";
 import toast from "react-hot-toast";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/Dialog";
+import { Trash2, AlertTriangle } from "lucide-react";
+import { supabaseAdmin } from "@/lib/supabase";
 
 interface UserWithDetails extends Profile {
   wallet?: Wallet;
@@ -36,6 +40,10 @@ export default function UsersPage() {
   const [actionLoading, setActionLoading] = useState(false);
   const [showFlagModal, setShowFlagModal] = useState(false);
   const [flagReason, setFlagReason] = useState("");
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<UserWithDetails | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const { isSuperAdmin } = useAuth();
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -225,6 +233,38 @@ export default function UsersPage() {
     }
   };
 
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return;
+    setDeleteLoading(true);
+    try {
+      // Delete from Supabase Auth
+      await supabaseAdmin.auth.admin.deleteUser(userToDelete.id);
+      
+      // Delete user profile
+      const { error } = await supabaseAdmin
+        .from("profiles")
+        .delete()
+        .eq("id", userToDelete.id);
+
+      if (error) throw error;
+
+      toast.success(`User ${userToDelete.name || userToDelete.email} deleted successfully`);
+      setShowDeleteModal(false);
+      setUserToDelete(null);
+      setSelectedUser(null);
+      setShowUserModal(false);
+      // Refresh users list
+      const response = await getUsers({ page, pageSize: 20 });
+      setUsers(response.data as UserWithDetails[]);
+      setTotalCount(response.count);
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      toast.error("Failed to delete user");
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
   return (
     <MainLayout title="Users" subtitle="Manage all registered users and their accounts">
       <div className="space-y-6">
@@ -314,6 +354,18 @@ export default function UsersPage() {
             >
               {selectedUser?.is_active ? "Suspend User" : "Activate User"}
             </Button>
+            {isSuperAdmin && selectedUser?.role !== "superadmin" && (
+              <Button 
+                variant="destructive" 
+                icon={Trash2} 
+                onClick={() => {
+                  setUserToDelete(selectedUser);
+                  setShowDeleteModal(true);
+                }}
+              >
+                Delete User
+              </Button>
+            )}
           </>
         }
       >
@@ -522,6 +574,38 @@ export default function UsersPage() {
           />
         </div>
       </Modal>
+
+      {/* Delete User Modal */}
+      <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="h-5 w-5" />
+              Delete User
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-slate-600">
+              Are you sure you want to delete <strong>{userToDelete?.name || userToDelete?.email}</strong>? 
+              This action will:
+            </p>
+            <ul className="mt-3 space-y-1 text-sm text-slate-500 list-disc list-inside">
+              <li>Completely delete the user from Supabase Auth</li>
+              <li>Delete the user profile and all associated data</li>
+              <li>This action cannot be undone</li>
+            </ul>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDeleteModal(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteUser} loading={deleteLoading}>
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete User
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </MainLayout>
   );
 }
